@@ -1,0 +1,27 @@
+{
+  "name": "simplecast-ai-marketing-agent",
+  "version": "1.0.0",
+  "description": "100% Free Autonomous AI Marketing Agent for Simplecast Podcasts running on GitHub Actions",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node src/index.js --dry-run"
+  },
+  "keywords": [
+    "podcast",
+    "ai-agent",
+    "simplecast",
+    "marketing",
+    "gemini-api",
+    "github-actions"
+  ],
+  "author": "Antigravity AI",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^0.1.2",
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2",
+    "rss-parser": "^3.13.0"
+  }
+}

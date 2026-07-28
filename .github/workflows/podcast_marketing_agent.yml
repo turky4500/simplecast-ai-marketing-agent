@@ -1,0 +1,50 @@
+name: Simplecast AI Marketing Agent
+
+on:
+  schedule:
+    # Runs every 4 hours automatically
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+permissions:
+  contents: write
+
+jobs:
+  market-podcast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Run Simplecast AI Marketing Agent
+        env:
+          SIMPLECAST_RSS_URL: ${{ secrets.SIMPLECAST_RSS_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BUFFER_ACCESS_TOKEN: ${{ secrets.BUFFER_ACCESS_TOKEN }}
+          BUFFER_PROFILE_IDS: ${{ secrets.BUFFER_PROFILE_IDS }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node src/index.js
+
+      - name: Commit and Push Updated State & Generated Campaigns
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add processed_episodes.json campaigns/ || true
+          if git diff --staged --quiet; then
+            echo "No state changes or new campaign files to commit."
+          else
+            git commit -m "auto(agent): market new episode & update processed state"
+            git push
+          fi
