@@ -17,13 +17,13 @@ export const config = {
   // Gemini API Key
   geminiApiKey: process.env.GEMINI_API_KEY || '',
 
-  // Maximum episodes to process per run (batch size to respect Gemini free limits & GitHub Actions time)
-  batchSize: parseInt(process.env.BATCH_SIZE || '5', 10),
+  // Maximum episodes to process per run (batch size)
+  batchSize: parseInt(process.env.BATCH_SIZE || '3', 10),
 
-  // Delay in milliseconds between processing episodes to respect API rate limits
-  rateLimitDelayMs: parseInt(process.env.RATE_LIMIT_DELAY_MS || '3000', 10),
+  // Delay in milliseconds between processing episodes to respect 5 RPM limit (13 seconds)
+  rateLimitDelayMs: parseInt(process.env.RATE_LIMIT_DELAY_MS || '13000', 10),
 
-  // Buffer API Access Token (Optional for social posting)
+  // Buffer API Access Token (Optional)
   bufferAccessToken: process.env.BUFFER_ACCESS_TOKEN || '',
   bufferProfileIds: process.env.BUFFER_PROFILE_IDS ? process.env.BUFFER_PROFILE_IDS.split(',') : [],
 

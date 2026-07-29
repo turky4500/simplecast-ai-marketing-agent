@@ -1,10 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleGenAI } from '@google/genai';
 import { config } from './config.js';
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
- * Generates a complete viral marketing campaign for a podcast episode using Gemini API.
- * @param {Object} episode Episode details (title, description, audioUrl, pubDate, etc.)
+ * Generates a complete viral marketing campaign for a podcast episode using Gemini API with automatic rate limit retries.
+ * @param {Object} episode Episode details
  * @returns {Promise<Object>} Generated marketing campaign package
  */
 export async function generateMarketingCampaign(episode) {
@@ -73,62 +74,42 @@ ${episode.description}
 \`\`\`
   `;
 
-  // List of models to try in sequence
-  const candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro'
-  ];
-
-  let lastError = null;
-
-  // 1. Try with GoogleGenerativeAI SDK
   const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  for (const modelName of candidateModels) {
-    try {
-      console.log(`[AI Agent] Attempting generation with model: "${modelName}"...`);
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: { responseMimeType: 'application/json' }
-      });
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      
-      const campaign = JSON.parse(cleanJsonResponse(text));
-      console.log(`[AI Agent] Successfully generated campaign using model "${modelName}"!`);
-      return campaign;
-    } catch (err) {
-      console.warn(`[AI Agent] Model "${modelName}" failed:`, err.message);
-      lastError = err;
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+
+  let maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`[AI Agent] [Attempt ${attempt}/${maxAttempts}] Calling Gemini model "${modelName}"...`);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { responseMimeType: 'application/json' }
+        });
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const campaign = JSON.parse(cleanJsonResponse(text));
+
+        console.log(`[AI Agent] ✅ Campaign successfully generated using "${modelName}"!`);
+        return campaign;
+      } catch (err) {
+        const isRateLimit = err.message && (err.message.includes('429') || err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED'));
+        
+        if (isRateLimit) {
+          console.warn(`[AI Agent] Rate limit hit on "${modelName}". Pausing 20s before retry...`);
+          await sleep(20000);
+        } else {
+          console.warn(`[AI Agent] Model "${modelName}" failed with: ${err.message}`);
+        }
+      }
     }
   }
 
-  // 2. Fallback to @google/genai SDK
-  const newGenAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
-  for (const modelName of candidateModels) {
-    try {
-      console.log(`[AI Agent] Attempting fallback SDK generation with model: "${modelName}"...`);
-      const response = await newGenAI.models.generateContent({
-        model: modelName,
-        contents: prompt,
-        config: { responseMimeType: 'application/json' }
-      });
-      const campaign = JSON.parse(cleanJsonResponse(response.text));
-      console.log(`[AI Agent] Successfully generated campaign using fallback SDK & model "${modelName}"!`);
-      return campaign;
-    } catch (err) {
-      console.warn(`[AI Agent] Fallback SDK model "${modelName}" failed:`, err.message);
-      lastError = err;
-    }
-  }
-
-  throw new Error(`All Gemini models failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+  throw new Error('Failed to generate campaign after retries due to API rate limits or model errors.');
 }
 
-/**
- * Cleans Markdown formatting from JSON response if present.
- */
 function cleanJsonResponse(text) {
   let cleaned = text.trim();
   if (cleaned.startsWith('```json')) {
