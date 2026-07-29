@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   market-podcast:
@@ -35,16 +37,16 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node src/index.js
 
-      - name: Commit and Push Updated State & Generated Campaigns
+      - name: Commit and Push Updated State, SEO Site & Generated Campaigns
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add processed_episodes.json campaigns/ || true
+          git add processed_episodes.json campaigns/ docs/ || true
           if git diff --staged --quiet; then
             echo "No state changes or new campaign files to commit."
           else
-            git commit -m "auto(agent): market new episode & update processed state"
+            git commit -m "auto(agent): market episodes, build SEO website & update state"
             git push
           fi
