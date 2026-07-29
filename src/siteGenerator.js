@@ -2,22 +2,23 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Generates a complete SEO-optimized GitHub Pages Website in both root / and /docs.
- * @param {Array} episodes List of all processed episode objects with their generated campaigns
+ * Generates a high-end, professional Light Mode Podcast Website with direct inline MP3 Audio Players.
+ * Zero mentions of AI, logs, or automated generation.
+ * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building SEO GitHub Pages website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Professional Light Mode Podcast Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // Prevent Jekyll processing so raw custom HTML is served directly
+  // Prevent Jekyll processing
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
 
-  // 1. Generate Individual Episode SEO Pages
+  // 1. Generate Individual Episode Pages
   const episodePages = [];
   
   for (const item of allProcessedData) {
@@ -25,7 +26,6 @@ export function buildSeoWebsite(allProcessedData) {
     const safeShowSlug = slugify(episode.showTitle);
     const safeEpSlug = slugify(episode.title);
     
-    // Create folders in both root and docs
     const rootShowDir = path.join('.', safeShowSlug);
     const docsShowDir = path.join(docsDir, safeShowSlug);
 
@@ -42,18 +42,20 @@ export function buildSeoWebsite(allProcessedData) {
       title: episode.title,
       showTitle: episode.showTitle,
       pubDate: episode.pubDate,
+      audioUrl: episode.audioUrl || episode.link,
+      duration: episode.duration || '',
       url: pageUrl,
       summary: campaign.highlightsSummary || episode.description.substring(0, 150),
       link: episode.link
     });
   }
 
-  // 2. Generate Main Hub Landing Page in both ROOT (index.html) and docs/index.html
+  // 2. Generate Main Hub Page in both root index.html and docs/index.html
   const indexHtml = generateMainHubHtml(episodePages, allProcessedData);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
-  // 3. Generate Google Sitemap (sitemap.xml)
+  // 3. Generate Sitemap XML
   const sitemapXml = generateSitemapXml(episodePages);
   fs.writeFileSync('sitemap.xml', sitemapXml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'sitemap.xml'), sitemapXml, 'utf8');
@@ -63,13 +65,14 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Successfully generated root index.html and SEO website!`);
+  console.log(`[Site Generator] ✅ Successfully generated clean Light Mode website!`);
 }
 
 function generateEpisodeHtml(episode, campaign, pageUrl) {
   const fullCanonicalUrl = `https://turky4500.github.io/simplecast-ai-marketing-agent/${pageUrl}`;
-  const seoTitle = `${campaign.googleSeoArticle?.title || episode.title} | ${episode.showTitle}`;
+  const seoTitle = `${episode.title} - ${episode.showTitle}`;
   const seoDesc = campaign.googleSeoArticle?.metaDescription || episode.description.substring(0, 160);
+  const audioFileUrl = episode.audioUrl || episode.link;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -80,12 +83,11 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
     "url": fullCanonicalUrl,
     "associatedMedia": {
       "@type": "MediaObject",
-      "contentUrl": episode.audioUrl || episode.link
+      "contentUrl": audioFileUrl
     },
     "partOfSeries": {
       "@type": "PodcastSeries",
-      "name": episode.showTitle,
-      "url": episode.showLink || fullCanonicalUrl
+      "name": episode.showTitle
     }
   };
 
@@ -102,7 +104,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   <meta property="og:description" content="${escapeHtml(seoDesc)}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="${fullCanonicalUrl}">
-  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,86 +115,90 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
 
   <style>
     :root {
-      --bg-color: #0d1117;
-      --card-bg: #161b22;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --text: #f0f6fc;
-      --text-muted: #8b949e;
-      --border: #30363d;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     body {
       font-family: 'Cairo', sans-serif;
       background-color: var(--bg-color);
-      color: var(--text);
+      color: var(--text-main);
       margin: 0;
       padding: 0;
       line-height: 1.8;
     }
     header {
-      background: linear-gradient(135deg, #1e1e38 0%, #0d1117 100%);
+      background-color: #ffffff;
       border-bottom: 1px solid var(--border);
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
       text-align: center;
+      box-shadow: var(--shadow);
     }
-    header h1 { margin: 0; font-size: 1.8rem; color: #818cf8; }
-    header p { color: var(--text-muted); margin-top: 0.5rem; }
+    header h1 { margin: 0; font-size: 1.6rem; color: var(--accent); font-weight: 800; }
     .container {
       max-width: 900px;
-      margin: 2rem auto;
+      margin: 2.5rem auto;
       padding: 0 1rem;
     }
     .back-btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       color: var(--accent);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .back-btn:hover { text-decoration: underline; }
+    .player-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+    }
+    .player-card h2 { color: var(--text-main); margin-top: 0; font-size: 1.6rem; }
+    .meta-info {
+      display: flex;
+      gap: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
       margin-bottom: 1.5rem;
     }
-    .hero-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-    }
-    .hero-card h2 { color: #fff; margin-top: 0; }
-    .btn-listen {
-      display: inline-block;
-      background: var(--accent);
-      color: white;
-      padding: 0.8rem 1.8rem;
+    audio {
+      width: 100%;
+      outline: none;
       border-radius: 30px;
-      text-decoration: none;
-      font-weight: 700;
-      margin-top: 1rem;
-      transition: background 0.2s;
     }
-    .btn-listen:hover { background: var(--accent-hover); }
-    .article-section {
+    .content-box {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
+      box-shadow: var(--shadow);
     }
-    .threads-grid, .shorts-grid {
-      display: grid;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .thread-card, .short-card {
-      background: #0d1117;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.2rem;
+    .content-box h3 {
+      color: var(--accent);
+      margin-top: 0;
+      font-size: 1.3rem;
+      border-bottom: 2px solid #eff6ff;
+      padding-bottom: 0.5rem;
     }
     footer {
       text-align: center;
-      padding: 2rem;
+      padding: 2.5rem 1rem;
       color: var(--text-muted);
       border-top: 1px solid var(--border);
-      margin-top: 3rem;
+      background: #ffffff;
+      margin-top: 4rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -203,47 +208,33 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   </header>
 
   <div class="container">
-    <a href="../index.html" class="back-btn">← العودة للرئيسية</a>
+    <a href="../index.html" class="back-btn">→ العودة إلى قائمة الحلقات</a>
 
-    <div class="hero-card">
+    <div class="player-card">
       <h2>${escapeHtml(episode.title)}</h2>
-      <p>📅 <strong>تاريخ النشر:</strong> ${episode.pubDate}</p>
-      <a href="${episode.link}" target="_blank" class="btn-listen">🎧 استمع للحلقة الآن على Simplecast</a>
+      <div class="meta-info">
+        <span>📅 ${episode.pubDate}</span>
+        ${episode.duration ? `<span>⏱️ ${episode.duration}</span>` : ''}
+      </div>
+
+      <!-- MP3 Inline Player -->
+      <audio controls preload="metadata">
+        <source src="${audioFileUrl}" type="audio/mpeg">
+        متصفحك لا يدعم مشغل الصوتيات.
+      </audio>
     </div>
 
-    <div class="article-section">
-      <h3>🔍 الدليل الشامل للحلقة</h3>
+    <!-- Article Content -->
+    <div class="content-box">
+      <h3>عن هذه الحلقة</h3>
       <div>
         ${renderMarkdownToHtml(campaign.googleSeoArticle?.contentMarkdown || episode.description)}
       </div>
     </div>
-
-    ${campaign.twitterThread ? `
-    <div class="article-section">
-      <h3>🧵 ملخص X (تويتر)</h3>
-      <div class="threads-grid">
-        ${campaign.twitterThread.map((t, idx) => `<div class="thread-card"><strong>تغريدة ${idx + 1}:</strong><p>${escapeHtml(t)}</p></div>`).join('')}
-      </div>
-    </div>` : ''}
-
-    ${campaign.shortVideoScripts ? `
-    <div class="article-section">
-      <h3>🎬 مقاطع صامتة ورؤوس أقلام (بدون موسيقى)</h3>
-      <div class="shorts-grid">
-        ${campaign.shortVideoScripts.map((s, idx) => `
-          <div class="short-card">
-            <h4>${escapeHtml(s.clipTitle)}</h4>
-            <p><strong>المشهد:</strong> ${escapeHtml(s.visualDescription)}</p>
-            <p><strong>الصوت (الكلام فقط):</strong> ${escapeHtml(s.voiceoverScript)}</p>
-            <p><strong>النص على الشاشة:</strong> <code>${escapeHtml(s.onScreenText)}</code></p>
-          </div>
-        `).join('')}
-      </div>
-    </div>` : ''}
   </div>
 
   <footer>
-    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي 🤖</p>
+    <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
   </footer>
 </body>
 </html>`;
@@ -262,8 +253,8 @@ function generateMainHubHtml(episodePages, allProcessedData) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مركز البودكاست الشامل | دليل الاستماع والحلقات</title>
-  <meta name="description" content="المكتبة الشاملة لاستكشاف حلقات البودكاست والمحتوى المتوافق مع محركات البحث.">
+  <title>المكتبة الصوتية الشاملة - البودكاست</title>
+  <meta name="description" content="استمع مباشرة لأحدث حلقات البودكاست مع مشغل MP3 ورؤى تحليلية متكاملة.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -271,86 +262,154 @@ function generateMainHubHtml(episodePages, allProcessedData) {
 
   <style>
     :root {
-      --bg-color: #0d1117;
-      --card-bg: #161b22;
-      --accent: #6366f1;
-      --text: #f0f6fc;
-      --text-muted: #8b949e;
-      --border: #30363d;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     body {
       font-family: 'Cairo', sans-serif;
       background-color: var(--bg-color);
-      color: var(--text);
+      color: var(--text-main);
       margin: 0;
       line-height: 1.7;
     }
-    .hero {
-      background: linear-gradient(135deg, #1e1e38 0%, #0d1117 100%);
-      padding: 3rem 1rem;
-      text-align: center;
+    .top-bar {
+      background-color: #ffffff;
       border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
     }
-    .hero h1 { font-size: 2.5rem; color: #818cf8; margin-bottom: 0.5rem; }
-    .container { max-width: 1100px; margin: 3rem auto; padding: 0 1rem; }
-    .show-section { margin-bottom: 3rem; }
-    .show-title { font-size: 1.8rem; color: #fff; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .top-bar h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 800;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+    .show-section {
+      margin-bottom: 3.5rem;
+    }
+    .show-title-badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: var(--accent);
+      font-size: 1.4rem;
+      font-weight: 800;
+      padding: 0.4rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #dbeafe;
+    }
     .episodes-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.5rem;
     }
     .ep-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 1.5rem;
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s, border-color 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .ep-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-    .ep-card h3 { margin-top: 0; color: #fff; font-size: 1.2rem; }
-    .ep-card p { color: var(--text-muted); font-size: 0.95rem; flex-grow: 1; }
-    .ep-card a {
-      display: inline-block;
-      background: var(--accent);
-      color: #fff;
+    .ep-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .ep-card h3 {
+      margin-top: 0;
+      color: var(--text-main);
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .ep-card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      flex-grow: 1;
+      margin-bottom: 1rem;
+    }
+    audio {
+      width: 100%;
+      margin-top: 0.8rem;
+      outline: none;
+    }
+    .ep-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-details {
+      color: var(--accent);
       text-decoration: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 600;
-      margin-top: 1rem;
+      font-weight: 700;
+      font-size: 0.9rem;
     }
-    footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); }
+    .btn-details:hover {
+      text-decoration: underline;
+    }
+    footer {
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>🎙️ منصة البودكاست المتكاملة</h1>
+  <div class="top-bar">
+    <h1>🎙️ المكتبة الصوتية للبودكاست</h1>
   </div>
 
   <div class="container">
     ${Object.keys(showsMap).length > 0 ? Object.keys(showsMap).map(showName => `
       <div class="show-section">
-        <h2 class="show-title">📌 ${escapeHtml(showName)}</h2>
+        <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
         <div class="episodes-grid">
           ${showsMap[showName].map(item => `
             <div class="ep-card">
-              <h3>${escapeHtml(item.episode.title)}</h3>
-              <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 120))}...</p>
-              <a href="${slugify(showName)}/${slugify(item.episode.title)}.html">اقرأ المقال واستمع للحلقة ←</a>
+              <div>
+                <h3>${escapeHtml(item.episode.title)}</h3>
+                <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
+                
+                <!-- Direct Inline MP3 Audio Player -->
+                <audio controls preload="none">
+                  <source src="${item.episode.audioUrl || item.episode.link}" type="audio/mpeg">
+                </audio>
+              </div>
+
+              <div class="ep-footer">
+                <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
+                <a href="${slugify(showName)}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل وقراءة الملخص ←</a>
+              </div>
             </div>
           `).join('')}
         </div>
       </div>
-    `).join('') : '<p style="text-align:center;">جاري تحميل وحفظ أول دفعة حلقات...</p>'}
+    `).join('') : '<p style="text-align:center;">جاري تحميل الحلقات...</p>'}
   </div>
 
   <footer>
-    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي 🤖</p>
+    <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
   </footer>
 </body>
 </html>`;

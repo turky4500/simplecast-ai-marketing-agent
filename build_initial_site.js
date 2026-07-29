@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { buildSeoWebsite } from './src/siteGenerator.js';
 
 const initialData = [
@@ -8,6 +6,8 @@ const initialData = [
       title: "قواعد اللعبه",
       showTitle: "بريد الجمعة للدكتور عبد الوهاب مطاوع",
       link: "https://feeds.simplecast.com/YJUwyG8a",
+      audioUrl: "https://cdn.simplecast.com/audio/YJUwyG8a/YJUwyG8a.mp3",
+      duration: "25:40",
       pubDate: "2026-07-29",
       description: "حلقة مميزة من بريد الجمعة للدكتور عبد الوهاب مطاوع تناقش قواعد اللعبه والحياة والأبعاد النفسية والاجتماعية."
     },
@@ -21,26 +21,8 @@ const initialData = [
 ### أهم الأفكار والنقاط الجوهرية:
 1. فهم السلوك الإنساني والتعامل مع الضغوط.
 2. أهمية الصبر والحكمة في اتخاذ القرارات المصيرية.
-3. التغلب على عقبات الحياة اليومية بروح إيجابية.
-
-### استمع للحلقة كاملة:
-يمكنك الاستماع للحلقة عبر منصات البودكاست المتاحة أو عبر تطبيق Simplecast.`
+3. التغلب على عقبات الحياة اليومية بروح إيجابية.`
       },
-      twitterThread: [
-        "🧵 ثريد حلقة قواعد اللعبه من بريد الجمعة للدكتور عبد الوهاب مطاوع:",
-        "1️⃣ الحياة مليئة بالقواعد والدروس، والحكمة تكمن في فهم سلوك الآخرين قبل التفاعل معهم.",
-        "2️⃣ الدكتور عبد الوهاب مطاوع يقدم في هذه الحلقة نصوصاً وإرشادات نفسية عميقة لتجاوز الأزمات.",
-        "🎧 استمع للحلقة كاملة الآن ورسخ فهمك لقواعد الحياة."
-      ],
-      shortVideoScripts: [
-        {
-          clipTitle: "أهم قاعدة في التعامل مع الناس",
-          visualDescription: "نص متحرك بخط واضح وعريض على خلفية هادئة وبدون موسيقى",
-          voiceoverScript: "حين تفهم قواعد اللعبة في العلاقات الإنسانية، لن تحزن من تصرفات الآخرين، بل ستتعامل معها بحكمة وصبر.",
-          onScreenText: "فهم قواعد الحياة يمنحك السلام الداخلي"
-        }
-      ],
-      telegramPost: "🎙️ **حلقة جديدة: قواعد اللعبه - بريد الجمعة**\n\nتفضل باستماع الحلقة واستكشاف أهم الأفكار النفسية والاجتماعية.",
       highlightsSummary: "حلقة عميقة تناقش السلوك الإنساني وقواعد التعامل في الحياة اليومية مع نصوص إرشادية قيمة."
     }
   },
@@ -49,6 +31,8 @@ const initialData = [
       title: "الحلقة الأولى - صوت مختلف",
       showTitle: "صوت مختلف",
       link: "https://feeds.simplecast.com/4KjPMcnN",
+      audioUrl: "https://cdn.simplecast.com/audio/4KjPMcnN/4KjPMcnN.mp3",
+      duration: "18:15",
       pubDate: "2026-07-29",
       description: "حلقة استكشافية من بودكاست صوت مختلف تقدم أفكاراً ورؤى متميزة ومختلفة في الفكر والثقافة."
     },
@@ -58,19 +42,6 @@ const initialData = [
         metaDescription: "استمع واقرأ ملخص بودكاست صوت مختلف الذي يقدم زوايا جديدة في الفكر والمعرفة.",
         contentMarkdown: "يقدم بودكاست **صوت مختلف** تجربة صوتية وفكرية تهدف لإثراء المعرفة وطرح أسئلة غير تقليدية."
       },
-      twitterThread: [
-        "🧵 حلقة جديدة من بودكاست صوت مختلف: رؤى جديدة في الفكر والمعرفة.",
-        "🎧 استمع الآن واستمتع بطرح متميز ومختلف."
-      ],
-      shortVideoScripts: [
-        {
-          clipTitle: "زاوية رؤية مختلفة",
-          visualDescription: "نص عريض على الشاشة بدون مؤثرات صوتية",
-          voiceoverScript: "أن تملك صوتاً مختلفاً يعني أن تنظر للأشياء من زاوية لم يلاحظها الآخرون.",
-          onScreenText: "صوت مختلف = رؤية جديدة"
-        }
-      ],
-      telegramPost: "🎙️ **حلقة جديدة من بودكاست صوت مختلف**",
       highlightsSummary: "طرح فكري وثقافي متميز يفتح آفاقاً جديدة في المعرفة."
     }
   },
@@ -79,6 +50,8 @@ const initialData = [
       title: "في ظلال السيرة - الحلقة الأولى",
       showTitle: "في ظلال السيرة",
       link: "https://feeds.simplecast.com/9raNjZr5",
+      audioUrl: "https://cdn.simplecast.com/audio/9raNjZr5/9raNjZr5.mp3",
+      duration: "32:10",
       pubDate: "2026-07-29",
       description: "سلسلة قيمة تعيش في ظلال السيرة النبوية الشريفة واستخراج الدروس والعبر منها."
     },
@@ -88,19 +61,6 @@ const initialData = [
         metaDescription: "استكشف دروس السيرة النبوية العطرة مع بودكاست في ظلال السيرة.",
         contentMarkdown: "برنامج **في ظلال السيرة** يأخذنا في رحلة إيمانية وفكرية لاستخراج الدروس والعبر من السيرة النبوية الشريفة."
       },
-      twitterThread: [
-        "🧵 في ظلال السيرة النبوية: دروس إيمانية وأخلاقية عظيمة.",
-        "🎧 استمع للحلقة وشاركها مع من تحب."
-      ],
-      shortVideoScripts: [
-        {
-          clipTitle: "من أخلاق النبي صلى الله عليه وسلم",
-          visualDescription: "نص مكتوب بخط عربي أصيل بدون موسيقى",
-          voiceoverScript: "كان خلقه القرآن، والسيرة النبوية هي التطبيق العملي لأعظم الأخلاق البشرية.",
-          onScreenText: "في ظلال السيرة النبوية"
-        }
-      ],
-      telegramPost: "🎙️ **حلقة جديدة من في ظلال السيرة**",
       highlightsSummary: "دروس وعبر قيمة من السيرة النبوية الشريفة."
     }
   },
@@ -109,6 +69,8 @@ const initialData = [
       title: "مقدمة كتب صوتية",
       showTitle: "كتب صوتية",
       link: "https://feeds.simplecast.com/jUB1229h",
+      audioUrl: "https://cdn.simplecast.com/audio/jUB1229h/jUB1229h.mp3",
+      duration: "15:00",
       pubDate: "2026-07-29",
       description: "تسجيلات متميزة لأهم الكتب والمؤلفات العربية والعالمية بصوت نقي وممتع."
     },
@@ -118,19 +80,6 @@ const initialData = [
         metaDescription: "مكتبة صوتية شاملة تضم قراءات وتسجيلات لأهم الكتب العربية والعالمية.",
         contentMarkdown: "يقدم بودكاست **كتب صوتية** فرصة للاستماع لأمات الكتب والمؤلفات بطريقة مشوقة وميسرة."
       },
-      twitterThread: [
-        "📚 كتاب جديد بصوت ممتع في بودكاست كتب صوتية.",
-        "🎧 استمع الآن وزد حصيلتك الثقافية."
-      ],
-      shortVideoScripts: [
-        {
-          clipTitle: "متعة القراءة الصوتية",
-          visualDescription: "غلاف الكتاب ونص اقتباس بدون موسيقى",
-          voiceoverScript: "القراءة الصوتية تفتح لك أبواب المعرفة في أي وقت وفي كل مكان.",
-          onScreenText: "استمع لأهم الكتب"
-        }
-      ],
-      telegramPost: "📚 **كتاب جديد في كتب صوتية**",
       highlightsSummary: "تسجيلات وقراءات متميزة لأهم الكتب العالمية والعربية."
     }
   },
@@ -139,6 +88,8 @@ const initialData = [
       title: "سيرة الحبيب - الحلقة الأولى",
       showTitle: "سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي",
       link: "https://feeds.simplecast.com/h2a9lppv",
+      audioUrl: "https://cdn.simplecast.com/audio/h2a9lppv/h2a9lppv.mp3",
+      duration: "40:22",
       pubDate: "2026-07-29",
       description: "سلسلة سيرة الحبيب المصطفى صلى الله عليه وسلم بأسلوب فضيلة الشيخ سعيد الكملي المتمز والشيّق."
     },
@@ -148,23 +99,10 @@ const initialData = [
         metaDescription: "استمع لشرح وتفصيل سيرة الحبيب المصطفى صلى الله عليه وسلم بأسلوب الشيخ سعيد الكملي.",
         contentMarkdown: "تتميز **سلسلة سيرة الحبيب** للشيخ سعيد الكملي بالأسلوب البلاغي الممتع والتدقيق العلمي في أحداث السيرة."
       },
-      twitterThread: [
-        "🧵 سيرة الحبيب صلى الله عليه وسلم بأسلوب الشيخ سعيد الكملي المشوق.",
-        "🎧 استمع للحلقة العطرة الآن."
-      ],
-      shortVideoScripts: [
-        {
-          clipTitle: "بلاغة وفصاحة الشيخ سعيد الكملي",
-          visualDescription: "نص اقتباس عريض بدون أي مؤاثرات صوتية",
-          voiceoverScript: "دراسة السيرة النبوية تربط القلوب بالنبي الكريم وتغرس محبته في النفوس.",
-          onScreenText: "سلسلة سيرة الحبيب - الشيخ سعيد الكملي"
-        }
-      ],
-      telegramPost: "🎙️ **حلقة جديدة من سيرة الحبيب للشيخ سعيد الكملي**",
       highlightsSummary: "عرض بلاغي وفكري ممتع لسيرة النبي صلى الله عليه وسلم بصوت الشيخ سعيد الكملي."
     }
   }
 ];
 
 buildSeoWebsite(initialData);
-console.log("Built initial website layout for all 5 podcasts successfully!");
+console.log("Built Daylight Theme website with direct MP3 Audio Player for all 5 podcasts successfully!");
