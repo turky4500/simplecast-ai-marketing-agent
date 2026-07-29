@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مركز البودكاست الشامل | دليل الاستماع والحلقات</title>
+  <meta name="description" content="المكتبة الشاملة لاستكشاف حلقات البودكاست، المقالات التسويقية المحسنة لجوجل، والنصوص الصوتية المباشرة.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: #161b22;
+      --accent: #6366f1;
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+      --border: #30363d;
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      line-height: 1.7;
+    }
+    .hero {
+      background: linear-gradient(135deg, #1e1e38 0%, #0d1117 100%);
+      padding: 4rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 { font-size: 2.5rem; color: #818cf8; margin-bottom: 0.5rem; }
+    .hero p { color: var(--text-muted); font-size: 1.2rem; max-width: 600px; margin: 0 auto; }
+    .container { max-width: 1100px; margin: 3rem auto; padding: 0 1rem; }
+    .show-section { margin-bottom: 3rem; }
+    .show-title { font-size: 1.8rem; color: #fff; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .episodes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .ep-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .ep-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .ep-card h3 { margin-top: 0; color: #fff; font-size: 1.2rem; }
+    .ep-card p { color: var(--text-muted); font-size: 0.95rem; flex-grow: 1; }
+    .ep-card a {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>🎙️ منصة البودكاست المتكاملة</h1>
+    <p>دليلك الاستكشافي الشامل للحلقات، المقالات، والمحتوى التسويقي المتوافق مع محركات بحث جوجل</p>
+  </div>
+
+  <div class="container">
+    <p style="text-align:center;">جاري تحميل وحفظ أول دفعة حلقات...</p>
+  </div>
+
+  <footer>
+    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي عبر GitHub Actions 🤖</p>
+  </footer>
+</body>
+</html>

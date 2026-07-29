@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://turky4500.github.io/simplecast-ai-marketing-agent/sitemap.xml
