@@ -1,20 +1,32 @@
 import fs from 'fs';
 import path from 'path';
 
+const ADSENSE_SCRIPT = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7778135355055222" crossorigin="anonymous"></script>`;
+
+const ADSENSE_BANNER = `
+<div style="margin: 1.5rem 0; text-align: center;">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-7778135355055222"
+       data-ad-slot="auto"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>`;
+
 /**
- * Generates a clean, lightweight Main Page with top 2 episodes per show,
- * plus dedicated show archive pages (e.g., showSlug/index.html) for all 909 episodes.
+ * Generates a high-end, professional Light Mode Podcast Website with embedded Google AdSense monetisation.
  * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Optimized Podcast Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building AdSense Monetized Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // Prevent Jekyll processing on GitHub Pages
+  // Prevent Jekyll processing
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
 
@@ -57,7 +69,7 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 1. Generate Dedicated Show Pages (showSlug/index.html) with all episodes per show
+  // 1. Generate Dedicated Show Pages (showSlug/index.html)
   for (const showName of Object.keys(showsMap)) {
     const safeShowSlug = slugify(showName);
     const showItems = showsMap[showName];
@@ -70,7 +82,7 @@ export function buildSeoWebsite(allProcessedData) {
     fs.writeFileSync(path.join(docsShowDir, 'index.html'), showHtml, 'utf8');
   }
 
-  // 2. Generate Main Hub Page (index.html) with Top 2 Episodes per show
+  // 2. Generate Main Hub Page (index.html)
   const indexHtml = generateMainHubHtml(showsMap, allProcessedData.length);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
@@ -85,7 +97,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Lightweight Main Hub + Dedicated Show Pages successfully built!`);
+  console.log(`[Site Generator] ✅ Google AdSense successfully integrated across all pages!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
@@ -96,6 +108,9 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>المكتبة الصوتية للبودكاست</title>
   <meta name="description" content="استمع لأحدث حلقات البودكاست واستكشف الأرشيف الشامل مع مشغل MP3 المباشر.">
+
+  <!-- Google AdSense Script -->
+  ${ADSENSE_SCRIPT}
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,7 +125,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
     body {
       font-family: 'Cairo', sans-serif;
@@ -240,9 +255,12 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
   </div>
 
   <div class="container">
+    <!-- AdSense Banner Top -->
+    ${ADSENSE_BANNER}
+
     ${Object.keys(showsMap).map(showName => {
       const allItems = showsMap[showName];
-      const top2Items = allItems.slice(0, 2); // Show only top 2 episodes
+      const top2Items = allItems.slice(0, 2);
       const safeShowSlug = slugify(showName);
 
       return `
@@ -277,6 +295,9 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       </div>
       `;
     }).join('')}
+
+    <!-- AdSense Banner Bottom -->
+    ${ADSENSE_BANNER}
   </div>
 
   <footer>
@@ -296,6 +317,9 @@ function generateDedicatedShowHtml(showName, showItems) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>جميع حلقات ${escapeHtml(showName)} (${showItems.length} حلقة)</title>
   <meta name="description" content="الأرشيف الكامل لحلقات بودكاست ${escapeHtml(showName)} مع مشغل MP3 مباشر للجميع.">
+
+  <!-- Google AdSense Script -->
+  ${ADSENSE_SCRIPT}
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -386,6 +410,8 @@ function generateDedicatedShowHtml(showName, showItems) {
   <div class="container">
     <a href="../index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
 
+    ${ADSENSE_BANNER}
+
     <div class="episodes-grid">
       ${showItems.map(item => `
         <div class="ep-card" data-title="${escapeHtml(item.episode.title)}">
@@ -405,6 +431,8 @@ function generateDedicatedShowHtml(showName, showItems) {
         </div>
       `).join('')}
     </div>
+
+    ${ADSENSE_BANNER}
   </div>
 
   <script>
@@ -461,6 +489,9 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   <meta name="description" content="${escapeHtml(seoDesc)}">
   <link rel="canonical" href="${fullCanonicalUrl}">
   
+  <!-- Google AdSense Script -->
+  ${ADSENSE_SCRIPT}
+
   <meta property="og:title" content="${escapeHtml(seoTitle)}">
   <meta property="og:description" content="${escapeHtml(seoDesc)}">
   <meta property="og:type" content="article">
@@ -552,6 +583,17 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       border-bottom: 2px solid #eff6ff;
       padding-bottom: 0.5rem;
     }
+    .threads-grid, .shorts-grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .thread-card, .short-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+    }
     footer {
       text-align: center;
       padding: 2.5rem 1rem;
@@ -584,12 +626,41 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </audio>
     </div>
 
+    <!-- AdSense Banner Middle -->
+    ${ADSENSE_BANNER}
+
     <div class="content-box">
       <h3>عن هذه الحلقة</h3>
       <div>
         ${renderMarkdownToHtml(campaign.googleSeoArticle?.contentMarkdown || episode.description)}
       </div>
     </div>
+
+    ${campaign.twitterThread ? `
+    <div class="content-box">
+      <h3>🧵 ملخص X (تويتر)</h3>
+      <div class="threads-grid">
+        ${campaign.twitterThread.map((t, idx) => `<div class="thread-card"><strong>تغريدة ${idx + 1}:</strong><p>${escapeHtml(t)}</p></div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${campaign.shortVideoScripts ? `
+    <div class="content-box">
+      <h3>🎬 مقاطع صامتة ورؤوس أقلام (بدون موسيقى)</h3>
+      <div class="shorts-grid">
+        ${campaign.shortVideoScripts.map((s, idx) => `
+          <div class="short-card">
+            <h4 style="margin-top:0; color:var(--accent);">${escapeHtml(s.clipTitle)}</h4>
+            <p><strong>المشهد المرئي:</strong> ${escapeHtml(s.visualDescription)}</p>
+            <p><strong>الصوت (الكلام فقط):</strong> ${escapeHtml(s.voiceoverScript)}</p>
+            <p><strong>النص المكتوب على الشاشة:</strong> <code>${escapeHtml(s.onScreenText)}</code></p>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- AdSense Banner Bottom -->
+    ${ADSENSE_BANNER}
   </div>
 
   <footer>
