@@ -4,7 +4,7 @@ import { config } from './config.js';
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Generates a complete viral marketing campaign for a podcast episode using Gemini API with automatic rate limit retries.
+ * Generates a complete viral marketing campaign for a podcast episode using Gemini API.
  * @param {Object} episode Episode details
  * @returns {Promise<Object>} Generated marketing campaign package
  */
@@ -75,14 +75,13 @@ ${episode.description}
   `;
 
   const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  
-  // List of standard Gemini models supported in Google AI Studio Free Tier
+
+  // Model names in order of preference
   const candidateModels = [
-    'gemini-1.5-flash-latest',
-    'gemini-2.0-flash-exp',
-    'gemini-1.5-pro-latest',
+    'gemini-1.5-flash-8b',
     'gemini-1.5-flash',
-    'gemini-2.0-flash'
+    'gemini-2.0-flash',
+    'gemini-2.5-flash'
   ];
 
   let lastError = null;
@@ -104,15 +103,14 @@ ${episode.description}
     } catch (err) {
       console.warn(`[AI Agent] Model "${modelName}" error:`, err.message);
       lastError = err;
-      
-      if (err.message && (err.message.includes('429') || err.message.includes('Quota exceeded'))) {
-        console.log(`[AI Agent] Short pause 5s due to rate limit on "${modelName}"...`);
-        await sleep(5000);
+
+      if (err.message && err.message.includes('limit: 0')) {
+        console.warn(`[AI Agent] API Key project has 0 quota for model "${modelName}".`);
       }
     }
   }
 
-  throw new Error(`All Gemini candidate models failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+  throw new Error(`All Gemini models failed. If error says limit: 0, please generate a new API key in Google AI Studio by clicking 'Create API key in new project'. Last error: ${lastError ? lastError.message : 'Unknown'}`);
 }
 
 function cleanJsonResponse(text) {
