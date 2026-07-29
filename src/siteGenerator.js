@@ -17,44 +17,39 @@ const ADSENSE_BANNER = `
 const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
 
 /**
- * Generates a high-end, professional Light Mode Podcast Website with 100% working clean URLs.
- * Dedicated show pages are generated as direct show-slug.html files in root and docs to eliminate index redirects.
- * @param {Array} allProcessedData
+ * Stable, rock-solid Podcast Website generator with Google AdSense monetisation.
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building AdSense Monetized Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Stable AdSense Monetized Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // Prevent Jekyll processing
+  // 1. Prevent Jekyll & write ads.txt
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
-
-  // Write ads.txt for AdSense verification
   fs.writeFileSync('ads.txt', ADS_TXT_CONTENT, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'ads.txt'), ADS_TXT_CONTENT, 'utf8');
 
-  // Group episodes by show name
+  // 2. Group episodes by show name
   const showsMap = {};
   const episodePages = [];
 
   for (let i = 0; i < allProcessedData.length; i++) {
     const item = allProcessedData[i];
     const { episode, campaign } = item;
-    const show = episode.showTitle;
-    
-    const safeShowSlug = slugify(episode.showTitle);
-    const epCleanSlug = slugify(episode.title) || `ep-${i + 1}`;
-    
-    // Assign calculated slugs to item
-    item.showSlug = safeShowSlug;
-    item.epSlug = epCleanSlug;
+    const show = episode.showTitle || 'البودكاست';
 
     if (!showsMap[show]) showsMap[show] = [];
     showsMap[show].push(item);
+
+    const safeShowSlug = cleanSlug(show);
+    const epCleanSlug = cleanSlug(episode.title) || `ep-${i + 1}`;
+
+    item.showSlug = safeShowSlug;
+    item.epSlug = epCleanSlug;
 
     const rootShowDir = path.join('.', safeShowSlug);
     const docsShowDir = path.join(docsDir, safeShowSlug);
@@ -68,58 +63,54 @@ export function buildSeoWebsite(allProcessedData) {
     try {
       fs.writeFileSync(path.join(rootShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
       fs.writeFileSync(path.join(docsShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
-    } catch (e) {
-      console.error(`Error writing file for ${epCleanSlug}:`, e.message);
-    }
+    } catch (e) {}
 
     episodePages.push({
       title: episode.title,
       showTitle: episode.showTitle,
       pubDate: episode.pubDate,
-      audioUrl: episode.audioUrl || episode.link,
-      duration: episode.duration || '',
-      url: pageUrl,
-      summary: campaign.highlightsSummary || episode.description.substring(0, 150),
-      link: episode.link
+      url: pageUrl
     });
   }
 
-  // 1. Generate Dedicated Show Pages (showSlug.html) directly in root and docs/
+  // 3. Generate Dedicated Show Pages (e.g. showSlug.html)
   for (const showName of Object.keys(showsMap)) {
     const showItems = showsMap[showName];
-    const safeShowSlug = slugify(showName);
+    const safeShowSlug = cleanSlug(showName);
     const showHtml = generateDedicatedShowHtml(showName, showItems);
 
     fs.writeFileSync(`${safeShowSlug}.html`, showHtml, 'utf8');
     fs.writeFileSync(path.join(docsDir, `${safeShowSlug}.html`), showHtml, 'utf8');
   }
 
-  // 2. Generate Main Hub Page (index.html)
+  // 4. Generate Main Hub Page (index.html)
   const indexHtml = generateMainHubHtml(showsMap, allProcessedData.length);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
-  // 3. Generate Sitemap XML
+  // 5. Generate Sitemap XML
   const sitemapXml = generateSitemapXml(episodePages);
   fs.writeFileSync('sitemap.xml', sitemapXml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'sitemap.xml'), sitemapXml, 'utf8');
 
-  // 4. Generate Robots.txt
+  // 6. Generate Robots.txt
   const robotsTxt = `User-agent: *\nAllow: /\nSitemap: https://turky4500.github.io/simplecast-ai-marketing-agent/sitemap.xml\n`;
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Dedicated show archive pages (showSlug.html) generated without index redirects!`);
+  console.log(`[Site Generator] ✅ Stable AdSense Website successfully generated!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
+  const showKeys = Object.keys(showsMap);
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>المكتبة الصوتية للبودكاست</title>
-  <meta name="description" content="استمع لأحدث حلقات البودكاست واستكشف الأرشيف الشامل مع مشغل MP3 المباشر.">
+  <meta name="description" content="استمع مباشرة لأحدث حلقات البودكاست مع مشغل MP3 المباشر ورؤى تحليلية متكاملة.">
 
   <!-- Google AdSense Script -->
   ${ADSENSE_SCRIPT}
@@ -156,11 +147,27 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
     .top-bar h1 {
       font-size: 2.2rem;
       color: var(--accent);
-      margin: 0;
+      margin: 0 0 1rem 0;
       font-weight: 800;
     }
+    .search-box-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.9rem 1.4rem;
+      border-radius: 30px;
+      border: 2px solid var(--border);
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
     .container {
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 3rem auto;
       padding: 0 1rem;
     }
@@ -244,12 +251,8 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       font-weight: 800;
       font-size: 1rem;
       margin-top: 1.8rem;
-      transition: background 0.2s, transform 0.1s;
     }
-    .btn-view-all:hover {
-      background: #dbeafe;
-      transform: translateY(-2px);
-    }
+    .btn-view-all:hover { background: #dbeafe; }
 
     footer {
       text-align: center;
@@ -264,25 +267,29 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 <body>
   <div class="top-bar">
     <h1>🎙️ المكتبة الصوتية للبودكاست</h1>
+    <div class="search-box-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث في جميع الحلقات (${totalEpisodesCount} حلقة)..." onkeyup="filterEpisodes()">
+    </div>
   </div>
 
   <div class="container">
     ${ADSENSE_BANNER}
 
-    ${Object.keys(showsMap).map(showName => {
+    ${showKeys.map(showName => {
       const allItems = showsMap[showName];
       const top2Items = allItems.slice(0, 2);
-      const safeShowSlug = slugify(showName);
+      const safeShowSlug = cleanSlug(showName);
 
       return `
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
+          <span style="color: var(--text-muted); font-weight:600;">(${allItems.length} حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           ${top2Items.map(item => `
-            <div class="ep-card">
+            <div class="ep-card" data-title="${escapeHtml(item.episode.title)}">
               <div>
                 <h3>${escapeHtml(item.episode.title)}</h3>
                 <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
@@ -310,6 +317,21 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
     ${ADSENSE_BANNER}
   </div>
 
+  <script>
+    function filterEpisodes() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.ep-card');
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title').toLowerCase();
+        if (title.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+
   <footer>
     <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
   </footer>
@@ -318,6 +340,8 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 }
 
 function generateDedicatedShowHtml(showName, showItems) {
+  const safeShowSlug = cleanSlug(showName);
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -357,7 +381,7 @@ function generateDedicatedShowHtml(showName, showItems) {
       text-align: center;
       box-shadow: var(--shadow);
     }
-    .header h1 { color: var(--accent); margin: 0 0 0.5rem 0; font-size: 2rem; }
+    .header h1 { color: var(--accent); margin: 0 0 0.5rem 0; font-size: 2rem; font-weight:800; }
     .search-input {
       width: 100%;
       max-width: 500px;
@@ -471,23 +495,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   const seoDesc = campaign.googleSeoArticle?.metaDescription || episode.description.substring(0, 160);
   const audioFileUrl = episode.audioUrl || episode.link;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "PodcastEpisode",
-    "name": episode.title,
-    "description": seoDesc,
-    "datePublished": episode.pubDate,
-    "url": fullCanonicalUrl,
-    "associatedMedia": {
-      "@type": "MediaObject",
-      "contentUrl": audioFileUrl
-    },
-    "partOfSeries": {
-      "@type": "PodcastSeries",
-      "name": episode.showTitle
-    }
-  };
-
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -500,25 +507,15 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   <!-- Google AdSense Script -->
   ${ADSENSE_SCRIPT}
 
-  <meta property="og:title" content="${escapeHtml(seoTitle)}">
-  <meta property="og:description" content="${escapeHtml(seoDesc)}">
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="${fullCanonicalUrl}">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  
-  <script type="application/ld+json">
-  ${JSON.stringify(jsonLd, null, 2)}
-  </script>
 
   <style>
     :root {
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --accent: #2563eb;
-      --accent-hover: #1d4ed8;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
@@ -571,11 +568,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       font-size: 0.9rem;
       margin-bottom: 1.5rem;
     }
-    audio {
-      width: 100%;
-      outline: none;
-      border-radius: 30px;
-    }
+    audio { width: 100%; outline: none; }
     .content-box {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -634,7 +627,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </audio>
     </div>
 
-    <!-- AdSense Banner Middle -->
     ${ADSENSE_BANNER}
 
     <div class="content-box">
@@ -667,7 +659,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </div>
     </div>` : ''}
 
-    <!-- AdSense Banner Bottom -->
     ${ADSENSE_BANNER}
   </div>
 
@@ -691,8 +682,8 @@ ${urls.map(url => `  <url>\n    <loc>${url}</loc>\n    <changefreq>daily</change
 </urlset>`;
 }
 
-function slugify(text) {
-  if (!text) return '';
+function cleanSlug(text) {
+  if (!text) return 'item';
   return text
     .toString()
     .trim()
@@ -718,8 +709,8 @@ function renderMarkdownToHtml(md) {
   if (!md) return '';
   return md
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '## $1')
-    .replace(/^# (.*$)/gim, '# $1')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
     .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*)\*/gim, '<em>$1</em>')
     .replace(/\n\n/g, '</p><p>')

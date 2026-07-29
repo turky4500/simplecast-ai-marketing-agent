@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>المكتبة الصوتية للبودكاست</title>
-  <meta name="description" content="استمع لأحدث حلقات البودكاست واستكشف الأرشيف الشامل مع مشغل MP3 المباشر.">
+  <meta name="description" content="استمع مباشرة لأحدث حلقات البودكاست مع مشغل MP3 المباشر ورؤى تحليلية متكاملة.">
 
   <!-- Google AdSense Script -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7778135355055222" crossorigin="anonymous"></script>
@@ -41,11 +41,27 @@
     .top-bar h1 {
       font-size: 2.2rem;
       color: var(--accent);
-      margin: 0;
+      margin: 0 0 1rem 0;
       font-weight: 800;
     }
+    .search-box-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.9rem 1.4rem;
+      border-radius: 30px;
+      border: 2px solid var(--border);
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
     .container {
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 3rem auto;
       padding: 0 1rem;
     }
@@ -129,12 +145,8 @@
       font-weight: 800;
       font-size: 1rem;
       margin-top: 1.8rem;
-      transition: background 0.2s, transform 0.1s;
     }
-    .btn-view-all:hover {
-      background: #dbeafe;
-      transform: translateY(-2px);
-    }
+    .btn-view-all:hover { background: #dbeafe; }
 
     footer {
       text-align: center;
@@ -149,6 +161,9 @@
 <body>
   <div class="top-bar">
     <h1>🎙️ المكتبة الصوتية للبودكاست</h1>
+    <div class="search-box-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث في جميع الحلقات (909 حلقة)..." onkeyup="filterEpisodes()">
+    </div>
   </div>
 
   <div class="container">
@@ -167,11 +182,12 @@
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 بريد الجمعة للدكتور عبد الوهاب مطاوع</div>
+          <span style="color: var(--text-muted); font-weight:600;">(405 حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="قواعد اللعبه">
               <div>
                 <h3>قواعد اللعبه</h3>
                 <p>Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
@@ -189,7 +205,7 @@ adve...</p>
               </div>
             </div>
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="كئوس العناء">
               <div>
                 <h3>كئوس العناء</h3>
                 <p>Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
@@ -217,11 +233,12 @@ adve...</p>
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 صوت مختلف</div>
+          <span style="color: var(--text-muted); font-weight:600;">(32 حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="الخرافات السبعة لنظرية التطور 1 د صبري الدمرداش">
               <div>
                 <h3>الخرافات السبعة لنظرية التطور 1 د صبري الدمرداش</h3>
                 <p>Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
@@ -239,7 +256,7 @@ adve...</p>
               </div>
             </div>
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="اليوم اللي تحترم فيه نفسك.. هو بداية كل شي">
               <div>
                 <h3>اليوم اللي تحترم فيه نفسك.. هو بداية كل شي</h3>
                 <p>اليوم اللي تحترم فيه نفسك.. هو بداية كل شي Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
@@ -266,11 +283,12 @@ for information about our c...</p>
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 في ظلال السيرة</div>
+          <span style="color: var(--text-muted); font-weight:600;">(336 حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="384_ آية تريح المسلم من دعايات النفاق">
               <div>
                 <h3>384_ آية تريح المسلم من دعايات النفاق</h3>
                 <p>384_ آية تريح المسلم من دعايات النفاق
@@ -288,7 +306,7 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for information ab
               </div>
             </div>
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="383_  في بيت عِتبان سماحة وشدة">
               <div>
                 <h3>383_  في بيت عِتبان سماحة وشدة</h3>
                 <p>383_  في بيت عِتبان سماحة وشدة
@@ -316,11 +334,12 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for information ab
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 كتب صوتية</div>
+          <span style="color: var(--text-muted); font-weight:600;">(43 حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="لا أعلم هويتي حوار مع ملحد">
               <div>
                 <h3>لا أعلم هويتي حوار مع ملحد</h3>
                 <p>لا أعلم هويتي -حوار مع ملحد-
@@ -338,7 +357,7 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for information ab
               </div>
             </div>
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="كتاب من أسرار القرآن | د. مصطفی محمود">
               <div>
                 <h3>كتاب من أسرار القرآن | د. مصطفی محمود</h3>
                 <p>كتاب من أسرار القرآن | د. مصطفی محمود | كتب صوتية بصوت إسلام عادل
@@ -366,11 +385,12 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for inform...</p>
       <div class="show-section">
         <div class="show-header">
           <div class="show-title-badge">📌 سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي</div>
+          <span style="color: var(--text-muted); font-weight:600;">(93 حلقة)</span>
         </div>
 
         <div class="episodes-grid">
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="وفاة رسول الله ﷺ.. حين أظلم من المدينة كل شيء">
               <div>
                 <h3>وفاة رسول الله ﷺ.. حين أظلم من المدينة كل شيء</h3>
                 <p>وفاة رسول الله ﷺ.. حين أظلم من المدينة كل شيء
@@ -388,7 +408,7 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for information ab
               </div>
             </div>
           
-            <div class="ep-card">
+            <div class="ep-card" data-title="بداية النهاية: لحظات مؤلمة من مرض رسول الله ﷺ">
               <div>
                 <h3>بداية النهاية: لحظات مؤلمة من مرض رسول الله ﷺ</h3>
                 <p>بداية النهاية: لحظات مؤلمة من مرض رسول الله ﷺ
@@ -425,6 +445,21 @@ Hosted by Simplecast, an AdsWizz company. See pcm.adswizz.com for information ab
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
   </div>
+
+  <script>
+    function filterEpisodes() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.ep-card');
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title').toLowerCase();
+        if (title.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
 
   <footer>
     <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
