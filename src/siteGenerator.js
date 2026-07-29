@@ -14,6 +14,8 @@ const ADSENSE_BANNER = `
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>`;
 
+const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
+
 /**
  * Generates a high-end, professional Light Mode Podcast Website with embedded Google AdSense monetisation.
  * @param {Array} allProcessedData
@@ -29,6 +31,10 @@ export function buildSeoWebsite(allProcessedData) {
   // Prevent Jekyll processing
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
+
+  // Write ads.txt for AdSense verification
+  fs.writeFileSync('ads.txt', ADS_TXT_CONTENT, 'utf8');
+  fs.writeFileSync(path.join(docsDir, 'ads.txt'), ADS_TXT_CONTENT, 'utf8');
 
   // Group episodes by show name
   const showsMap = {};
@@ -97,7 +103,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Google AdSense successfully integrated across all pages!`);
+  console.log(`[Site Generator] ✅ Google AdSense & ads.txt successfully integrated across all pages!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
