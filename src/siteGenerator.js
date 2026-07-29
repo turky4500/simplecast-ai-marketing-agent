@@ -2,27 +2,32 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Generates a high-end, professional Light Mode Podcast Website with direct inline MP3 Audio Players.
- * Supports instant client-side search across all 900+ episodes.
+ * Generates a clean, lightweight Main Page with top 2 episodes per show,
+ * plus dedicated show archive pages (e.g., showSlug/index.html) for all 909 episodes.
  * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Professional Light Mode Podcast Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Optimized Podcast Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // Prevent Jekyll processing
+  // Prevent Jekyll processing on GitHub Pages
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
 
-  // 1. Generate Individual Episode Pages
+  // Group episodes by show name
+  const showsMap = {};
   const episodePages = [];
-  
+
   for (const item of allProcessedData) {
     const { episode, campaign } = item;
+    const show = episode.showTitle;
+    if (!showsMap[show]) showsMap[show] = [];
+    showsMap[show].push(item);
+
     const safeShowSlug = slugify(episode.showTitle);
     const safeEpSlug = slugify(episode.title);
     
@@ -52,8 +57,21 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 2. Generate Main Hub Page in both root index.html and docs/index.html
-  const indexHtml = generateMainHubHtml(episodePages, allProcessedData);
+  // 1. Generate Dedicated Show Pages (showSlug/index.html) with all episodes per show
+  for (const showName of Object.keys(showsMap)) {
+    const safeShowSlug = slugify(showName);
+    const showItems = showsMap[showName];
+    const showHtml = generateDedicatedShowHtml(showName, showItems);
+
+    const rootShowDir = path.join('.', safeShowSlug);
+    const docsShowDir = path.join(docsDir, safeShowSlug);
+
+    fs.writeFileSync(path.join(rootShowDir, 'index.html'), showHtml, 'utf8');
+    fs.writeFileSync(path.join(docsShowDir, 'index.html'), showHtml, 'utf8');
+  }
+
+  // 2. Generate Main Hub Page (index.html) with Top 2 Episodes per show
+  const indexHtml = generateMainHubHtml(showsMap, allProcessedData.length);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
@@ -67,7 +85,348 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Successfully generated clean Light Mode website for all ${allProcessedData.length} episodes!`);
+  console.log(`[Site Generator] ✅ Lightweight Main Hub + Dedicated Show Pages successfully built!`);
+}
+
+function generateMainHubHtml(showsMap, totalEpisodesCount) {
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المكتبة الصوتية للبودكاست</title>
+  <meta name="description" content="استمع لأحدث حلقات البودكاست واستكشف الأرشيف الشامل مع مشغل MP3 المباشر.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.7;
+    }
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .top-bar h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 800;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+    .show-section {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow);
+    }
+    .show-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .show-title-badge {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .episodes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .ep-card {
+      background: var(--bg-color);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .ep-card h3 {
+      margin-top: 0;
+      color: var(--text-main);
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .ep-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      flex-grow: 1;
+      margin-bottom: 1rem;
+    }
+    audio {
+      width: 100%;
+      margin-top: 0.8rem;
+      outline: none;
+    }
+    .ep-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-details {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+    .btn-details:hover { text-decoration: underline; }
+    
+    .btn-view-all {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #eff6ff;
+      color: var(--accent);
+      border: 1px solid #dbeafe;
+      padding: 0.9rem 1.5rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 1rem;
+      margin-top: 1.8rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-view-all:hover {
+      background: #dbeafe;
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1>🎙️ المكتبة الصوتية للبودكاست</h1>
+  </div>
+
+  <div class="container">
+    ${Object.keys(showsMap).map(showName => {
+      const allItems = showsMap[showName];
+      const top2Items = allItems.slice(0, 2); // Show only top 2 episodes
+      const safeShowSlug = slugify(showName);
+
+      return `
+      <div class="show-section">
+        <div class="show-header">
+          <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
+        </div>
+
+        <div class="episodes-grid">
+          ${top2Items.map(item => `
+            <div class="ep-card">
+              <div>
+                <h3>${escapeHtml(item.episode.title)}</h3>
+                <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
+                
+                <audio controls preload="none">
+                  <source src="${item.episode.audioUrl || item.episode.link}" type="audio/mpeg">
+                </audio>
+              </div>
+
+              <div class="ep-footer">
+                <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
+                <a href="${safeShowSlug}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <a href="${safeShowSlug}/index.html" class="btn-view-all">
+          🔍 استعرض كامل الحلقات (${allItems.length} حلقة) ←
+        </a>
+      </div>
+      `;
+    }).join('')}
+  </div>
+
+  <footer>
+    <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
+  </footer>
+</body>
+</html>`;
+}
+
+function generateDedicatedShowHtml(showName, showItems) {
+  const safeShowSlug = slugify(showName);
+  
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جميع حلقات ${escapeHtml(showName)} (${showItems.length} حلقة)</title>
+  <meta name="description" content="الأرشيف الكامل لحلقات بودكاست ${escapeHtml(showName)} مع مشغل MP3 مباشر للجميع.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.7;
+    }
+    .header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .header h1 { color: var(--accent); margin: 0 0 0.5rem 0; font-size: 2rem; }
+    .search-input {
+      width: 100%;
+      max-width: 500px;
+      padding: 0.8rem 1.4rem;
+      border-radius: 30px;
+      border: 2px solid var(--border);
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      margin-top: 1rem;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .container { max-width: 1150px; margin: 3rem auto; padding: 0 1rem; }
+    .back-btn {
+      display: inline-block;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+    .episodes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .ep-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .ep-card h3 { margin-top: 0; color: var(--text-main); font-size: 1.15rem; }
+    .ep-card p { color: var(--text-muted); font-size: 0.9rem; flex-grow: 1; }
+    audio { width: 100%; margin-top: 0.8rem; outline: none; }
+    .ep-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-details { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+    footer { text-align: center; padding: 2.5rem; border-top: 1px solid var(--border); background: #ffffff; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📌 ${escapeHtml(showName)}</h1>
+    <p>الأرشيف الكامل (${showItems.length} حلقة)</p>
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث في حلقات هذا البودكاست..." onkeyup="filterEpisodes()">
+  </div>
+
+  <div class="container">
+    <a href="../index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
+
+    <div class="episodes-grid">
+      ${showItems.map(item => `
+        <div class="ep-card" data-title="${escapeHtml(item.episode.title)}">
+          <div>
+            <h3>${escapeHtml(item.episode.title)}</h3>
+            <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
+            
+            <audio controls preload="none">
+              <source src="${item.episode.audioUrl || item.episode.link}" type="audio/mpeg">
+            </audio>
+          </div>
+
+          <div class="ep-footer">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
+            <a href="${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <script>
+    function filterEpisodes() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.ep-card');
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title').toLowerCase();
+        if (title.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+
+  <footer>
+    <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
+  </footer>
+</body>
+</html>`;
 }
 
 function generateEpisodeHtml(episode, campaign, pageUrl) {
@@ -124,7 +483,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
     body {
       font-family: 'Cairo', sans-serif;
@@ -210,7 +569,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   </header>
 
   <div class="container">
-    <a href="../index.html" class="back-btn">→ العودة إلى قائمة الحلقات</a>
+    <a href="index.html" class="back-btn">→ العودة إلى أرشيف البودكاست</a>
 
     <div class="player-card">
       <h2>${escapeHtml(episode.title)}</h2>
@@ -219,14 +578,12 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
         ${episode.duration ? `<span>⏱️ ${episode.duration}</span>` : ''}
       </div>
 
-      <!-- MP3 Inline Player -->
       <audio controls preload="metadata">
         <source src="${audioFileUrl}" type="audio/mpeg">
         متصفحك لا يدعم مشغل الصوتيات.
       </audio>
     </div>
 
-    <!-- Article Content -->
     <div class="content-box">
       <h3>عن هذه الحلقة</h3>
       <div>
@@ -234,233 +591,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </div>
     </div>
   </div>
-
-  <footer>
-    <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
-  </footer>
-</body>
-</html>`;
-}
-
-function generateMainHubHtml(episodePages, allProcessedData) {
-  const showsMap = {};
-  for (const item of allProcessedData) {
-    const show = item.episode.showTitle;
-    if (!showsMap[show]) showsMap[show] = [];
-    showsMap[show].push(item);
-  }
-
-  const totalEpisodesCount = allProcessedData.length;
-
-  return `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المكتبة الصوتية الشاملة - البودكاست (${totalEpisodesCount} حلقة)</title>
-  <meta name="description" content="استمع مباشرة لأكثر من ${totalEpisodesCount} حلقة بودكاست مع مشغل MP3 ورؤى تحليلية متكاملة.">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    }
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      margin: 0;
-      line-height: 1.7;
-    }
-    .top-bar {
-      background-color: #ffffff;
-      border-bottom: 1px solid var(--border);
-      padding: 2.5rem 1rem;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .top-bar h1 {
-      font-size: 2.2rem;
-      color: var(--accent);
-      margin: 0;
-      font-weight: 800;
-    }
-    .search-box-container {
-      max-width: 600px;
-      margin: 1.5rem auto 0;
-    }
-    .search-input {
-      width: 100%;
-      padding: 0.9rem 1.4rem;
-      border-radius: 30px;
-      border: 2px solid var(--border);
-      font-family: 'Cairo', sans-serif;
-      font-size: 1rem;
-      outline: none;
-      box-sizing: border-box;
-      transition: border-color 0.2s;
-    }
-    .search-input:focus {
-      border-color: var(--accent);
-    }
-    .container {
-      max-width: 1150px;
-      margin: 3rem auto;
-      padding: 0 1rem;
-    }
-    .show-section {
-      margin-bottom: 3.5rem;
-    }
-    .show-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-    }
-    .show-title-badge {
-      display: inline-block;
-      background: #eff6ff;
-      color: var(--accent);
-      font-size: 1.4rem;
-      font-weight: 800;
-      padding: 0.4rem 1.2rem;
-      border-radius: 12px;
-      border: 1px solid #dbeafe;
-    }
-    .show-count {
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-    .episodes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-    .ep-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .ep-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    .ep-card h3 {
-      margin-top: 0;
-      color: var(--text-main);
-      font-size: 1.2rem;
-      font-weight: 700;
-      line-height: 1.4;
-    }
-    .ep-card p {
-      color: var(--text-muted);
-      font-size: 0.92rem;
-      flex-grow: 1;
-      margin-bottom: 1rem;
-    }
-    audio {
-      width: 100%;
-      margin-top: 0.8rem;
-      outline: none;
-    }
-    .ep-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 1.2rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-    .btn-details {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
-    .btn-details:hover {
-      text-decoration: underline;
-    }
-    footer {
-      text-align: center;
-      padding: 2.5rem;
-      border-top: 1px solid var(--border);
-      background: #ffffff;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="top-bar">
-    <h1>🎙️ المكتبة الصوتية الشاملة للبودكاست (${totalEpisodesCount} حلقة)</h1>
-    <div class="search-box-container">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث في جميع الحلقات البالغ عددها ${totalEpisodesCount}..." onkeyup="filterEpisodes()">
-    </div>
-  </div>
-
-  <div class="container">
-    ${Object.keys(showsMap).length > 0 ? Object.keys(showsMap).map(showName => `
-      <div class="show-section">
-        <div class="show-header">
-          <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
-          <span class="show-count">(${showsMap[showName].length} حلقة)</span>
-        </div>
-        <div class="episodes-grid">
-          ${showsMap[showName].map(item => `
-            <div class="ep-card" data-title="${escapeHtml(item.episode.title)}" data-show="${escapeHtml(showName)}">
-              <div>
-                <h3>${escapeHtml(item.episode.title)}</h3>
-                <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
-                
-                <!-- Direct Inline MP3 Audio Player -->
-                <audio controls preload="none">
-                  <source src="${item.episode.audioUrl || item.episode.link}" type="audio/mpeg">
-                </audio>
-              </div>
-
-              <div class="ep-footer">
-                <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-                <a href="${slugify(showName)}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('') : '<p style="text-align:center;">جاري تحميل الحلقات...</p>'}
-  </div>
-
-  <script>
-    function filterEpisodes() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const cards = document.querySelectorAll('.ep-card');
-      cards.forEach(card => {
-        const title = card.getAttribute('data-title').toLowerCase();
-        const show = card.getAttribute('data-show').toLowerCase();
-        if (title.includes(query) || show.includes(query)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    }
-  </script>
 
   <footer>
     <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
