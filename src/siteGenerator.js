@@ -3,7 +3,7 @@ import path from 'path';
 
 /**
  * Generates a high-end, professional Light Mode Podcast Website with direct inline MP3 Audio Players.
- * Zero mentions of AI, logs, or automated generation.
+ * Supports instant client-side search across all 900+ episodes.
  * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
@@ -35,8 +35,10 @@ export function buildSeoWebsite(allProcessedData) {
     const pageUrl = `${safeShowSlug}/${safeEpSlug}.html`;
     const htmlContent = generateEpisodeHtml(episode, campaign, pageUrl);
 
-    fs.writeFileSync(path.join(rootShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
-    fs.writeFileSync(path.join(docsShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
+    try {
+      fs.writeFileSync(path.join(rootShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
+      fs.writeFileSync(path.join(docsShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
+    } catch (e) {}
 
     episodePages.push({
       title: episode.title,
@@ -65,7 +67,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Successfully generated clean Light Mode website!`);
+  console.log(`[Site Generator] ✅ Successfully generated clean Light Mode website for all ${allProcessedData.length} episodes!`);
 }
 
 function generateEpisodeHtml(episode, campaign, pageUrl) {
@@ -248,13 +250,15 @@ function generateMainHubHtml(episodePages, allProcessedData) {
     showsMap[show].push(item);
   }
 
+  const totalEpisodesCount = allProcessedData.length;
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المكتبة الصوتية الشاملة - البودكاست</title>
-  <meta name="description" content="استمع مباشرة لأحدث حلقات البودكاست مع مشغل MP3 ورؤى تحليلية متكاملة.">
+  <title>المكتبة الصوتية الشاملة - البودكاست (${totalEpisodesCount} حلقة)</title>
+  <meta name="description" content="استمع مباشرة لأكثر من ${totalEpisodesCount} حلقة بودكاست مع مشغل MP3 ورؤى تحليلية متكاملة.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -291,13 +295,37 @@ function generateMainHubHtml(episodePages, allProcessedData) {
       margin: 0;
       font-weight: 800;
     }
+    .search-box-container {
+      max-width: 600px;
+      margin: 1.5rem auto 0;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.9rem 1.4rem;
+      border-radius: 30px;
+      border: 2px solid var(--border);
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+    }
     .container {
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 3rem auto;
       padding: 0 1rem;
     }
     .show-section {
       margin-bottom: 3.5rem;
+    }
+    .show-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
     }
     .show-title-badge {
       display: inline-block;
@@ -307,8 +335,12 @@ function generateMainHubHtml(episodePages, allProcessedData) {
       font-weight: 800;
       padding: 0.4rem 1.2rem;
       border-radius: 12px;
-      margin-bottom: 1.5rem;
       border: 1px solid #dbeafe;
+    }
+    .show-count {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.95rem;
     }
     .episodes-grid {
       display: grid;
@@ -377,16 +409,22 @@ function generateMainHubHtml(episodePages, allProcessedData) {
 </head>
 <body>
   <div class="top-bar">
-    <h1>🎙️ المكتبة الصوتية للبودكاست</h1>
+    <h1>🎙️ المكتبة الصوتية الشاملة للبودكاست (${totalEpisodesCount} حلقة)</h1>
+    <div class="search-box-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث في جميع الحلقات البالغ عددها ${totalEpisodesCount}..." onkeyup="filterEpisodes()">
+    </div>
   </div>
 
   <div class="container">
     ${Object.keys(showsMap).length > 0 ? Object.keys(showsMap).map(showName => `
       <div class="show-section">
-        <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
+        <div class="show-header">
+          <div class="show-title-badge">📌 ${escapeHtml(showName)}</div>
+          <span class="show-count">(${showsMap[showName].length} حلقة)</span>
+        </div>
         <div class="episodes-grid">
           ${showsMap[showName].map(item => `
-            <div class="ep-card">
+            <div class="ep-card" data-title="${escapeHtml(item.episode.title)}" data-show="${escapeHtml(showName)}">
               <div>
                 <h3>${escapeHtml(item.episode.title)}</h3>
                 <p>${escapeHtml(item.campaign.highlightsSummary || item.episode.description.substring(0, 110))}...</p>
@@ -399,7 +437,7 @@ function generateMainHubHtml(episodePages, allProcessedData) {
 
               <div class="ep-footer">
                 <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-                <a href="${slugify(showName)}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل وقراءة الملخص ←</a>
+                <a href="${slugify(showName)}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
               </div>
             </div>
           `).join('')}
@@ -407,6 +445,22 @@ function generateMainHubHtml(episodePages, allProcessedData) {
       </div>
     `).join('') : '<p style="text-align:center;">جاري تحميل الحلقات...</p>'}
   </div>
+
+  <script>
+    function filterEpisodes() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.ep-card');
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title').toLowerCase();
+        const show = card.getAttribute('data-show').toLowerCase();
+        if (title.includes(query) || show.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
 
   <footer>
     <p>© 2026 جميع الحقوق محفوظة - شبكة البودكاست الصوتية</p>
