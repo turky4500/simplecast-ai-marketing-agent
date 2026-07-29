@@ -18,6 +18,7 @@ const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942
 
 /**
  * Generates a high-end, professional Light Mode Podcast Website with 100% working clean URLs.
+ * Dedicated show pages are generated as direct show-slug.html files in root and docs to eliminate index redirects.
  * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
@@ -68,7 +69,7 @@ export function buildSeoWebsite(allProcessedData) {
       fs.writeFileSync(path.join(rootShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
       fs.writeFileSync(path.join(docsShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
     } catch (e) {
-      console.error(`Error writing file for ${safeEpSlug}:`, e.message);
+      console.error(`Error writing file for ${epCleanSlug}:`, e.message);
     }
 
     episodePages.push({
@@ -83,17 +84,14 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 1. Generate Dedicated Show Pages (showSlug/index.html)
+  // 1. Generate Dedicated Show Pages (showSlug.html) directly in root and docs/
   for (const showName of Object.keys(showsMap)) {
     const showItems = showsMap[showName];
     const safeShowSlug = slugify(showName);
     const showHtml = generateDedicatedShowHtml(showName, showItems);
 
-    const rootShowDir = path.join('.', safeShowSlug);
-    const docsShowDir = path.join(docsDir, safeShowSlug);
-
-    fs.writeFileSync(path.join(rootShowDir, 'index.html'), showHtml, 'utf8');
-    fs.writeFileSync(path.join(docsShowDir, 'index.html'), showHtml, 'utf8');
+    fs.writeFileSync(`${safeShowSlug}.html`, showHtml, 'utf8');
+    fs.writeFileSync(path.join(docsDir, `${safeShowSlug}.html`), showHtml, 'utf8');
   }
 
   // 2. Generate Main Hub Page (index.html)
@@ -111,7 +109,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ 100% bulletproof URLs generated for all ${allProcessedData.length} episodes!`);
+  console.log(`[Site Generator] ✅ Dedicated show archive pages (showSlug.html) generated without index redirects!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
@@ -302,7 +300,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
           `).join('')}
         </div>
 
-        <a href="${safeShowSlug}/index.html" class="btn-view-all">
+        <a href="${safeShowSlug}.html" class="btn-view-all">
           🔍 استعرض كامل الحلقات (${allItems.length} حلقة) ←
         </a>
       </div>
@@ -320,8 +318,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 }
 
 function generateDedicatedShowHtml(showName, showItems) {
-  const safeShowSlug = slugify(showName);
-  
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -420,7 +416,7 @@ function generateDedicatedShowHtml(showName, showItems) {
   </div>
 
   <div class="container">
-    <a href="../index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
+    <a href="index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
 
     ${ADSENSE_BANNER}
 
@@ -438,7 +434,7 @@ function generateDedicatedShowHtml(showName, showItems) {
 
           <div class="ep-footer">
             <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-            <a href="${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
+            <a href="${item.showSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
           </div>
         </div>
       `).join('')}
@@ -623,7 +619,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   </header>
 
   <div class="container">
-    <a href="index.html" class="back-btn">→ العودة إلى أرشيف البودكاست</a>
+    <a href="../index.html" class="back-btn">→ العودة إلى الصفحة الرئيسية</a>
 
     <div class="player-card">
       <h2>${escapeHtml(episode.title)}</h2>
@@ -701,7 +697,7 @@ function slugify(text) {
     .toString()
     .trim()
     .toLowerCase()
-    .replace(/[\.\_\:\,\/\?\!\(\)\[\]"'`؟،]/g, '') // Remove dots, colons, question marks, quotes, etc.
+    .replace(/[\.\_\:\,\/\?\!\(\)\[\]"'`؟،]/g, '')
     .replace(/\s+/g, '-')
     .replace(/[^\w\u0600-\u06FF\-]+/g, '')
     .replace(/\-\-+/g, '-')
@@ -722,8 +718,8 @@ function renderMarkdownToHtml(md) {
   if (!md) return '';
   return md
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gim, '## $1')
+    .replace(/^# (.*$)/gim, '# $1')
     .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*)\*/gim, '<em>$1</em>')
     .replace(/\n\n/g, '</p><p>')
