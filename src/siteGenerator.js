@@ -200,7 +200,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
 <body>
   <header>
     <h1>${escapeHtml(episode.showTitle)}</h1>
-    <p>بوابتك لاستكشاف واستماع أفضل حلقات البودكاست</p>
   </header>
 
   <div class="container">
@@ -213,7 +212,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
     </div>
 
     <div class="article-section">
-      <h3>🔍 مقال الدليل الشامل للحلقة (Google SEO)</h3>
+      <h3>🔍 الدليل الشامل للحلقة</h3>
       <div>
         ${renderMarkdownToHtml(campaign.googleSeoArticle?.contentMarkdown || episode.description)}
       </div>
@@ -244,7 +243,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   </div>
 
   <footer>
-    <p>تم توليد وبناء هذا الموقع تلقائياً بواسطة وكيل الذكاء الاصطناعي البصري والـ SEO 🤖</p>
+    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي 🤖</p>
   </footer>
 </body>
 </html>`;
@@ -264,7 +263,7 @@ function generateMainHubHtml(episodePages, allProcessedData) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مركز البودكاست الشامل | دليل الاستماع والحلقات</title>
-  <meta name="description" content="المكتبة الشاملة لاستكشاف حلقات البودكاست، المقالات التسويقية المحسنة لجوجل، والنصوص الصوتية المباشرة.">
+  <meta name="description" content="المكتبة الشاملة لاستكشاف حلقات البودكاست والمحتوى المتوافق مع محركات البحث.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -288,12 +287,11 @@ function generateMainHubHtml(episodePages, allProcessedData) {
     }
     .hero {
       background: linear-gradient(135deg, #1e1e38 0%, #0d1117 100%);
-      padding: 4rem 1rem;
+      padding: 3rem 1rem;
       text-align: center;
       border-bottom: 1px solid var(--border);
     }
     .hero h1 { font-size: 2.5rem; color: #818cf8; margin-bottom: 0.5rem; }
-    .hero p { color: var(--text-muted); font-size: 1.2rem; max-width: 600px; margin: 0 auto; }
     .container { max-width: 1100px; margin: 3rem auto; padding: 0 1rem; }
     .show-section { margin-bottom: 3rem; }
     .show-title { font-size: 1.8rem; color: #fff; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
@@ -332,7 +330,6 @@ function generateMainHubHtml(episodePages, allProcessedData) {
 <body>
   <div class="hero">
     <h1>🎙️ منصة البودكاست المتكاملة</h1>
-    <p>دليلك الاستكشافي الشامل للحلقات، المقالات، والمحتوى التسويقي المتوافق مع محركات بحث جوجل</p>
   </div>
 
   <div class="container">
@@ -353,7 +350,7 @@ function generateMainHubHtml(episodePages, allProcessedData) {
   </div>
 
   <footer>
-    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي عبر GitHub Actions 🤖</p>
+    <p>تم التحديث والتوليد تلقائياً بواسطة وكيل الذكاء الاصطناعي 🤖</p>
   </footer>
 </body>
 </html>`;
