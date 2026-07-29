@@ -83,15 +83,29 @@ ${episode.description}
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
-    });
+    // Try gemini-2.0-flash, fallback to gemini-1.5-flash if needed
+    let responseText = null;
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+      responseText = response.text;
+    } catch (e) {
+      console.warn('[AI Agent] gemini-2.0-flash error, trying gemini-1.5-flash fallback:', e.message);
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+      responseText = response.text;
+    }
 
-    const responseText = response.text;
     console.log(`[AI Agent] Successfully received marketing campaign from Gemini.`);
     
     // Parse JSON response safely
