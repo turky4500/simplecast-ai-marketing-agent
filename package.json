@@ -19,8 +19,9 @@
   "author": "Antigravity AI",
   "license": "MIT",
   "dependencies": {
-    "@google/genai": "^2.13.0",
-    "dotenv": "^16.6.1",
+    "@google/genai": "latest",
+    "@google/generative-ai": "^0.24.0",
+    "dotenv": "^16.4.7",
     "node-fetch": "^3.3.2",
     "rss-parser": "^3.13.0"
   }

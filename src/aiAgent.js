@@ -1,17 +1,6 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GoogleGenAI } from '@google/genai';
 import { config } from './config.js';
-
-let aiInstance = null;
-
-function getAiClient() {
-  if (!aiInstance) {
-    if (!config.geminiApiKey) {
-      throw new Error('GEMINI_API_KEY is not defined in environment variables.');
-    }
-    aiInstance = new GoogleGenAI({ apiKey: config.geminiApiKey });
-  }
-  return aiInstance;
-}
 
 /**
  * Generates a complete viral marketing campaign for a podcast episode using Gemini API.
@@ -19,8 +8,10 @@ function getAiClient() {
  * @returns {Promise<Object>} Generated marketing campaign package
  */
 export async function generateMarketingCampaign(episode) {
-  const ai = getAiClient();
-  
+  if (!config.geminiApiKey) {
+    throw new Error('GEMINI_API_KEY is not defined in environment variables.');
+  }
+
   console.log(`[AI Agent] Generating marketing campaign for episode: "${episode.title}"...`);
 
   const prompt = `
@@ -82,37 +73,68 @@ ${episode.description}
 \`\`\`
   `;
 
-  try {
-    // Try gemini-2.0-flash, fallback to gemini-1.5-flash if needed
-    let responseText = null;
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json'
-        }
-      });
-      responseText = response.text;
-    } catch (e) {
-      console.warn('[AI Agent] gemini-2.0-flash error, trying gemini-1.5-flash fallback:', e.message);
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json'
-        }
-      });
-      responseText = response.text;
-    }
+  // List of models to try in sequence
+  const candidateModels = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro'
+  ];
 
-    console.log(`[AI Agent] Successfully received marketing campaign from Gemini.`);
-    
-    // Parse JSON response safely
-    const campaign = JSON.parse(responseText);
-    return campaign;
-  } catch (error) {
-    console.error('[AI Agent] Error generating campaign via Gemini:', error.message);
-    throw error;
+  let lastError = null;
+
+  // 1. Try with GoogleGenerativeAI SDK
+  const genAI = new GoogleGenerativeAI(config.geminiApiKey);
+  for (const modelName of candidateModels) {
+    try {
+      console.log(`[AI Agent] Attempting generation with model: "${modelName}"...`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { responseMimeType: 'application/json' }
+      });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      
+      const campaign = JSON.parse(cleanJsonResponse(text));
+      console.log(`[AI Agent] Successfully generated campaign using model "${modelName}"!`);
+      return campaign;
+    } catch (err) {
+      console.warn(`[AI Agent] Model "${modelName}" failed:`, err.message);
+      lastError = err;
+    }
   }
+
+  // 2. Fallback to @google/genai SDK
+  const newGenAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
+  for (const modelName of candidateModels) {
+    try {
+      console.log(`[AI Agent] Attempting fallback SDK generation with model: "${modelName}"...`);
+      const response = await newGenAI.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: { responseMimeType: 'application/json' }
+      });
+      const campaign = JSON.parse(cleanJsonResponse(response.text));
+      console.log(`[AI Agent] Successfully generated campaign using fallback SDK & model "${modelName}"!`);
+      return campaign;
+    } catch (err) {
+      console.warn(`[AI Agent] Fallback SDK model "${modelName}" failed:`, err.message);
+      lastError = err;
+    }
+  }
+
+  throw new Error(`All Gemini models failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+}
+
+/**
+ * Cleans Markdown formatting from JSON response if present.
+ */
+function cleanJsonResponse(text) {
+  let cleaned = text.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  return cleaned;
 }
