@@ -75,39 +75,44 @@ ${episode.description}
   `;
 
   const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+  
+  // List of standard Gemini models supported in Google AI Studio Free Tier
+  const candidateModels = [
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash-exp',
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash'
+  ];
 
-  let maxAttempts = 3;
+  let lastError = null;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    for (const modelName of modelsToTry) {
-      try {
-        console.log(`[AI Agent] [Attempt ${attempt}/${maxAttempts}] Calling Gemini model "${modelName}"...`);
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { responseMimeType: 'application/json' }
-        });
+  for (const modelName of candidateModels) {
+    try {
+      console.log(`[AI Agent] Attempting generation with model: "${modelName}"...`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { responseMimeType: 'application/json' }
+      });
 
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        const campaign = JSON.parse(cleanJsonResponse(text));
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      const campaign = JSON.parse(cleanJsonResponse(text));
 
-        console.log(`[AI Agent] ✅ Campaign successfully generated using "${modelName}"!`);
-        return campaign;
-      } catch (err) {
-        const isRateLimit = err.message && (err.message.includes('429') || err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED'));
-        
-        if (isRateLimit) {
-          console.warn(`[AI Agent] Rate limit hit on "${modelName}". Pausing 20s before retry...`);
-          await sleep(20000);
-        } else {
-          console.warn(`[AI Agent] Model "${modelName}" failed with: ${err.message}`);
-        }
+      console.log(`[AI Agent] ✅ Campaign successfully generated using model "${modelName}"!`);
+      return campaign;
+    } catch (err) {
+      console.warn(`[AI Agent] Model "${modelName}" error:`, err.message);
+      lastError = err;
+      
+      if (err.message && (err.message.includes('429') || err.message.includes('Quota exceeded'))) {
+        console.log(`[AI Agent] Short pause 5s due to rate limit on "${modelName}"...`);
+        await sleep(5000);
       }
     }
   }
 
-  throw new Error('Failed to generate campaign after retries due to API rate limits or model errors.');
+  throw new Error(`All Gemini candidate models failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
 }
 
 function cleanJsonResponse(text) {
