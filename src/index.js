@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { fetchAllPodcastEpisodes } from './rssParser.js';
 import { getProcessedEpisodes, markEpisodeAsProcessed } from './stateManager.js';
 import { generateMarketingCampaign } from './aiAgent.js';
@@ -7,9 +9,6 @@ import { config } from './config.js';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Keep track of campaigns processed in memory for website generation
-const memoryProcessedData = [];
-
 async function main() {
   console.log('====================================================');
   console.log('🤖 Multi-Podcast Simplecast AI Marketing Agent & SEO Site Engine');
@@ -18,6 +17,8 @@ async function main() {
   if (config.dryRun) {
     console.log('⚡ DRY RUN MODE ACTIVE. No external API posts will be sent.');
   }
+
+  const memoryProcessedData = [];
 
   try {
     // 1. Fetch episodes across all configured podcast RSS feeds
@@ -77,19 +78,65 @@ async function main() {
       }
     }
 
-    // 5. Build/Update GitHub Pages SEO Website in ./docs
-    if (memoryProcessedData.length > 0) {
-      buildSeoWebsite(memoryProcessedData);
-    }
+    // Load any existing campaigns from ./campaigns to populate site fully
+    const existingCampaigns = loadExistingCampaigns();
+    const combinedData = [...memoryProcessedData, ...existingCampaigns];
+
+    // Build/Update GitHub Pages SEO Website
+    buildSeoWebsite(combinedData);
 
     console.log('\n====================================================');
-    console.log(`🎉 Execution completed! Successfully processed batch.`);
+    console.log(`🎉 Execution completed! Successfully processed batch & updated SEO Website.`);
     console.log('====================================================');
 
   } catch (error) {
     console.error('\n❌ Fatal error in execution pipeline:', error);
     process.exit(1);
   }
+}
+
+function loadExistingCampaigns() {
+  const list = [];
+  const campaignsDir = './campaigns';
+  if (!fs.existsSync(campaignsDir)) return list;
+
+  try {
+    const showFolders = fs.readdirSync(campaignsDir);
+    for (const folder of showFolders) {
+      const folderPath = path.join(campaignsDir, folder);
+      if (fs.statSync(folderPath).isDirectory()) {
+        const files = fs.readdirSync(folderPath);
+        for (const file of files) {
+          if (file.endsWith('.md')) {
+            const content = fs.readFileSync(path.join(folderPath, file), 'utf8');
+            const titleMatch = content.match(/الحملة التسويقية للحلقة:\s*(.*)/);
+            const title = titleMatch ? titleMatch[1].trim() : file.replace('.md', '');
+            const showTitle = folder.replace(/_/g, ' ');
+            
+            list.push({
+              episode: {
+                title: title,
+                showTitle: showTitle,
+                link: 'https://simplecast.com',
+                pubDate: 'المستمر',
+                description: title
+              },
+              campaign: {
+                googleSeoArticle: {
+                  title: title,
+                  contentMarkdown: content
+                },
+                highlightsSummary: title
+              }
+            });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Warning loading existing campaigns:', e.message);
+  }
+  return list;
 }
 
 main();

@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Generates a complete SEO-optimized GitHub Pages Website in the /docs directory.
+ * Generates a complete SEO-optimized GitHub Pages Website in both /docs directory and root.
+ * Creates .nojekyll to prevent GitHub Pages from building Jekyll README over custom HTML.
  * @param {Array} episodes List of all processed episode objects with their generated campaigns
  */
 export function buildSeoWebsite(allProcessedData) {
@@ -12,6 +13,10 @@ export function buildSeoWebsite(allProcessedData) {
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
+
+  // Prevent Jekyll processing on GitHub Pages so our custom HTML index.html is served
+  fs.writeFileSync('.nojekyll', '', 'utf8');
+  fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
 
   // 1. Generate Individual Episode SEO Pages
   const episodePages = [];
@@ -54,7 +59,7 @@ export function buildSeoWebsite(allProcessedData) {
   const robotsTxt = `User-agent: *\nAllow: /\nSitemap: https://turky4500.github.io/simplecast-ai-marketing-agent/sitemap.xml\n`;
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Successfully generated SEO website in ./docs!`);
+  console.log(`[Site Generator] ✅ Successfully generated SEO website in ./docs and disabled Jekyll!`);
 }
 
 function generateEpisodeHtml(episode, campaign, pageUrl) {
@@ -62,7 +67,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   const seoTitle = `${campaign.googleSeoArticle?.title || episode.title} | ${episode.showTitle}`;
   const seoDesc = campaign.googleSeoArticle?.metaDescription || episode.description.substring(0, 160);
 
-  // Schema.org Structured Data for Google Podcast & Article indexing
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "PodcastEpisode",
@@ -90,17 +94,15 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   <meta name="description" content="${escapeHtml(seoDesc)}">
   <link rel="canonical" href="${fullCanonicalUrl}">
   
-  <!-- OpenGraph Meta Tags for Social Sharing -->
   <meta property="og:title" content="${escapeHtml(seoTitle)}">
   <meta property="og:description" content="${escapeHtml(seoDesc)}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="${fullCanonicalUrl}">
   <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Google Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <script type="application/ld+json">
   ${JSON.stringify(jsonLd, null, 2)}
@@ -206,7 +208,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       <a href="${episode.link}" target="_blank" class="btn-listen">🎧 استمع للحلقة الآن على Simplecast</a>
     </div>
 
-    <!-- Google SEO Article -->
     <div class="article-section">
       <h3>🔍 مقال الدليل الشامل للحلقة (Google SEO)</h3>
       <div>
@@ -214,7 +215,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </div>
     </div>
 
-    <!-- Twitter Threads -->
     ${campaign.twitterThread ? `
     <div class="article-section">
       <h3>🧵 ملخص X (تويتر)</h3>
@@ -223,7 +223,6 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
       </div>
     </div>` : ''}
 
-    <!-- Shorts Scripts -->
     ${campaign.shortVideoScripts ? `
     <div class="article-section">
       <h3>🎬 مقاطع صامتة ورؤوس أقلام (بدون موسيقى)</h3>
@@ -333,7 +332,7 @@ function generateMainHubHtml(episodePages, allProcessedData) {
   </div>
 
   <div class="container">
-    ${Object.keys(showsMap).map(showName => `
+    ${Object.keys(showsMap).length > 0 ? Object.keys(showsMap).map(showName => `
       <div class="show-section">
         <h2 class="show-title">📌 ${escapeHtml(showName)}</h2>
         <div class="episodes-grid">
@@ -346,7 +345,7 @@ function generateMainHubHtml(episodePages, allProcessedData) {
           `).join('')}
         </div>
       </div>
-    `).join('')}
+    `).join('') : '<p style="text-align:center;">جاري تحميل وحفظ أول دفعة حلقات...</p>'}
   </div>
 
   <footer>
@@ -392,7 +391,7 @@ function renderMarkdownToHtml(md) {
   if (!md) return '';
   return md
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '2>$1</h2>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
     .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*)\*/gim, '<em>$1</em>')
