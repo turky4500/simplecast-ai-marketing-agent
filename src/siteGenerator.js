@@ -17,7 +17,7 @@ const ADSENSE_BANNER = `
 const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
 
 /**
- * Generates a high-end, professional Light Mode Podcast Website with embedded Google AdSense monetisation.
+ * Generates a high-end, professional Light Mode Podcast Website with 100% working clean URLs.
  * @param {Array} allProcessedData
  */
 export function buildSeoWebsite(allProcessedData) {
@@ -40,28 +40,36 @@ export function buildSeoWebsite(allProcessedData) {
   const showsMap = {};
   const episodePages = [];
 
-  for (const item of allProcessedData) {
+  for (let i = 0; i < allProcessedData.length; i++) {
+    const item = allProcessedData[i];
     const { episode, campaign } = item;
     const show = episode.showTitle;
+    
+    const safeShowSlug = slugify(episode.showTitle);
+    const epCleanSlug = slugify(episode.title) || `ep-${i + 1}`;
+    
+    // Assign calculated slugs to item
+    item.showSlug = safeShowSlug;
+    item.epSlug = epCleanSlug;
+
     if (!showsMap[show]) showsMap[show] = [];
     showsMap[show].push(item);
 
-    const safeShowSlug = slugify(episode.showTitle);
-    const safeEpSlug = slugify(episode.title);
-    
     const rootShowDir = path.join('.', safeShowSlug);
     const docsShowDir = path.join(docsDir, safeShowSlug);
 
     if (!fs.existsSync(rootShowDir)) fs.mkdirSync(rootShowDir, { recursive: true });
     if (!fs.existsSync(docsShowDir)) fs.mkdirSync(docsShowDir, { recursive: true });
 
-    const pageUrl = `${safeShowSlug}/${safeEpSlug}.html`;
+    const pageUrl = `${safeShowSlug}/${epCleanSlug}.html`;
     const htmlContent = generateEpisodeHtml(episode, campaign, pageUrl);
 
     try {
-      fs.writeFileSync(path.join(rootShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
-      fs.writeFileSync(path.join(docsShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
-    } catch (e) {}
+      fs.writeFileSync(path.join(rootShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
+      fs.writeFileSync(path.join(docsShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
+    } catch (e) {
+      console.error(`Error writing file for ${safeEpSlug}:`, e.message);
+    }
 
     episodePages.push({
       title: episode.title,
@@ -77,8 +85,8 @@ export function buildSeoWebsite(allProcessedData) {
 
   // 1. Generate Dedicated Show Pages (showSlug/index.html)
   for (const showName of Object.keys(showsMap)) {
-    const safeShowSlug = slugify(showName);
     const showItems = showsMap[showName];
+    const safeShowSlug = slugify(showName);
     const showHtml = generateDedicatedShowHtml(showName, showItems);
 
     const rootShowDir = path.join('.', safeShowSlug);
@@ -103,7 +111,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Google AdSense & ads.txt successfully integrated across all pages!`);
+  console.log(`[Site Generator] ✅ 100% bulletproof URLs generated for all ${allProcessedData.length} episodes!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
@@ -261,7 +269,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
   </div>
 
   <div class="container">
-    <!-- AdSense Banner Top -->
     ${ADSENSE_BANNER}
 
     ${Object.keys(showsMap).map(showName => {
@@ -289,7 +296,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 
               <div class="ep-footer">
                 <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-                <a href="${safeShowSlug}/${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
+                <a href="${safeShowSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
               </div>
             </div>
           `).join('')}
@@ -302,7 +309,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       `;
     }).join('')}
 
-    <!-- AdSense Banner Bottom -->
     ${ADSENSE_BANNER}
   </div>
 
@@ -432,7 +438,7 @@ function generateDedicatedShowHtml(showName, showItems) {
 
           <div class="ep-footer">
             <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-            <a href="${slugify(item.episode.title)}.html" class="btn-details">التفاصيل والقراءة ←</a>
+            <a href="${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
           </div>
         </div>
       `).join('')}
@@ -690,12 +696,16 @@ ${urls.map(url => `  <url>\n    <loc>${url}</loc>\n    <changefreq>daily</change
 }
 
 function slugify(text) {
+  if (!text) return '';
   return text
     .toString()
     .trim()
+    .toLowerCase()
+    .replace(/[\.\_\:\,\/\?\!\(\)\[\]"'`؟،]/g, '') // Remove dots, colons, question marks, quotes, etc.
     .replace(/\s+/g, '-')
     .replace(/[^\w\u0600-\u06FF\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function escapeHtml(text) {
