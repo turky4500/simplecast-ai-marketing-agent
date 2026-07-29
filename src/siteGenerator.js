@@ -16,18 +16,28 @@ const ADSENSE_BANNER = `
 
 const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
 
+// Clean ASCII mappings for GitHub Pages reliability
+const SHOW_SLUG_MAP = {
+  "بريد الجمعة للدكتور عبد الوهاب مطاوع": "show-bareed-aljumaa",
+  "صوت مختلف": "show-soot-mokhtalef",
+  "في ظلال السيرة": "show-fi-zelal-alseerah",
+  "كتب صوتية": "show-kotob-sawteya",
+  "سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي": "show-seerat-alhabeeb"
+};
+
 /**
- * Stable, rock-solid Podcast Website generator with Google AdSense monetisation.
+ * Bulletproof, rock-solid Podcast Website generator.
+ * Uses clean ASCII URLs for GitHub Pages compatibility while rendering 100% Arabic titles and content inside HTML.
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Stable AdSense Monetized Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Bulletproof AdSense Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // 1. Prevent Jekyll & write ads.txt
+  // 1. Write .nojekyll & ads.txt
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
   fs.writeFileSync('ads.txt', ADS_TXT_CONTENT, 'utf8');
@@ -43,13 +53,15 @@ export function buildSeoWebsite(allProcessedData) {
     const show = episode.showTitle || 'البودكاست';
 
     if (!showsMap[show]) showsMap[show] = [];
-    showsMap[show].push(item);
-
-    const safeShowSlug = cleanSlug(show);
-    const epCleanSlug = cleanSlug(episode.title) || `ep-${i + 1}`;
+    
+    const epIndexInShow = showsMap[show].length + 1;
+    const safeShowSlug = SHOW_SLUG_MAP[show] || `show-${Object.keys(showsMap).length}`;
+    const epCleanSlug = `ep-${epIndexInShow}`;
 
     item.showSlug = safeShowSlug;
     item.epSlug = epCleanSlug;
+
+    showsMap[show].push(item);
 
     const rootShowDir = path.join('.', safeShowSlug);
     const docsShowDir = path.join(docsDir, safeShowSlug);
@@ -73,10 +85,10 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 3. Generate Dedicated Show Pages (e.g. showSlug.html)
+  // 3. Generate Dedicated Show Archive Pages (e.g. show-bareed-aljumaa.html)
   for (const showName of Object.keys(showsMap)) {
     const showItems = showsMap[showName];
-    const safeShowSlug = cleanSlug(showName);
+    const safeShowSlug = SHOW_SLUG_MAP[showName] || `show-${Object.keys(showsMap).indexOf(showName) + 1}`;
     const showHtml = generateDedicatedShowHtml(showName, showItems);
 
     fs.writeFileSync(`${safeShowSlug}.html`, showHtml, 'utf8');
@@ -98,7 +110,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Stable AdSense Website successfully generated!`);
+  console.log(`[Site Generator] ✅ 100% Bulletproof ASCII-routed website generated successfully!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
@@ -251,6 +263,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       font-weight: 800;
       font-size: 1rem;
       margin-top: 1.8rem;
+      transition: background 0.2s, transform 0.1s;
     }
     .btn-view-all:hover { background: #dbeafe; }
 
@@ -278,7 +291,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
     ${showKeys.map(showName => {
       const allItems = showsMap[showName];
       const top2Items = allItems.slice(0, 2);
-      const safeShowSlug = cleanSlug(showName);
+      const safeShowSlug = SHOW_SLUG_MAP[showName] || `show-${showKeys.indexOf(showName) + 1}`;
 
       return `
       <div class="show-section">
@@ -301,7 +314,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 
               <div class="ep-footer">
                 <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-                <a href="${safeShowSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
+                <a href="${item.showSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
               </div>
             </div>
           `).join('')}
@@ -340,8 +353,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 }
 
 function generateDedicatedShowHtml(showName, showItems) {
-  const safeShowSlug = cleanSlug(showName);
-
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -680,19 +691,6 @@ function generateSitemapXml(episodePages) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(url => `  <url>\n    <loc>${url}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`).join('\n')}
 </urlset>`;
-}
-
-function cleanSlug(text) {
-  if (!text) return 'item';
-  return text
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[\.\_\:\,\/\?\!\(\)\[\]"'`؟،]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\u0600-\u06FF\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 function escapeHtml(text) {
