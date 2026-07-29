@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Generates a complete SEO-optimized GitHub Pages Website in both /docs directory and root.
- * Creates .nojekyll to prevent GitHub Pages from building Jekyll README over custom HTML.
+ * Generates a complete SEO-optimized GitHub Pages Website in both root / and /docs.
  * @param {Array} episodes List of all processed episode objects with their generated campaigns
  */
 export function buildSeoWebsite(allProcessedData) {
@@ -14,7 +13,7 @@ export function buildSeoWebsite(allProcessedData) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
 
-  // Prevent Jekyll processing on GitHub Pages so our custom HTML index.html is served
+  // Prevent Jekyll processing so raw custom HTML is served directly
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
 
@@ -26,16 +25,18 @@ export function buildSeoWebsite(allProcessedData) {
     const safeShowSlug = slugify(episode.showTitle);
     const safeEpSlug = slugify(episode.title);
     
-    const showDir = path.join(docsDir, safeShowSlug);
-    if (!fs.existsSync(showDir)) {
-      fs.mkdirSync(showDir, { recursive: true });
-    }
+    // Create folders in both root and docs
+    const rootShowDir = path.join('.', safeShowSlug);
+    const docsShowDir = path.join(docsDir, safeShowSlug);
 
-    const pagePath = path.join(showDir, `${safeEpSlug}.html`);
+    if (!fs.existsSync(rootShowDir)) fs.mkdirSync(rootShowDir, { recursive: true });
+    if (!fs.existsSync(docsShowDir)) fs.mkdirSync(docsShowDir, { recursive: true });
+
     const pageUrl = `${safeShowSlug}/${safeEpSlug}.html`;
-
     const htmlContent = generateEpisodeHtml(episode, campaign, pageUrl);
-    fs.writeFileSync(pagePath, htmlContent, 'utf8');
+
+    fs.writeFileSync(path.join(rootShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
+    fs.writeFileSync(path.join(docsShowDir, `${safeEpSlug}.html`), htmlContent, 'utf8');
 
     episodePages.push({
       title: episode.title,
@@ -47,19 +48,22 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 2. Generate Main Hub Landing Page (docs/index.html)
+  // 2. Generate Main Hub Landing Page in both ROOT (index.html) and docs/index.html
   const indexHtml = generateMainHubHtml(episodePages, allProcessedData);
+  fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
-  // 3. Generate Google Sitemap (docs/sitemap.xml)
+  // 3. Generate Google Sitemap (sitemap.xml)
   const sitemapXml = generateSitemapXml(episodePages);
+  fs.writeFileSync('sitemap.xml', sitemapXml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'sitemap.xml'), sitemapXml, 'utf8');
 
-  // 4. Generate Robots.txt (docs/robots.txt)
+  // 4. Generate Robots.txt
   const robotsTxt = `User-agent: *\nAllow: /\nSitemap: https://turky4500.github.io/simplecast-ai-marketing-agent/sitemap.xml\n`;
+  fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Successfully generated SEO website in ./docs and disabled Jekyll!`);
+  console.log(`[Site Generator] ✅ Successfully generated root index.html and SEO website!`);
 }
 
 function generateEpisodeHtml(episode, campaign, pageUrl) {

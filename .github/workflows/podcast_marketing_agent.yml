@@ -43,7 +43,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add processed_episodes.json campaigns/ docs/ || true
+          git add processed_episodes.json campaigns/ docs/ index.html sitemap.xml robots.txt .nojekyll || true
           if git diff --staged --quiet; then
             echo "No state changes or new campaign files to commit."
           else
