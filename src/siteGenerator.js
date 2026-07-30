@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+const BASE_URL = 'https://turky4500.github.io/simplecast-ai-marketing-agent';
+
 const ADSENSE_SCRIPT = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7778135355055222" crossorigin="anonymous"></script>`;
 
 const ADSENSE_BANNER = `
@@ -16,106 +18,106 @@ const ADSENSE_BANNER = `
 
 const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
 
-// Clean ASCII mappings for GitHub Pages reliability
-const SHOW_SLUG_MAP = {
-  "بريد الجمعة للدكتور عبد الوهاب مطاوع": "show-bareed-aljumaa",
-  "صوت مختلف": "show-soot-mokhtalef",
-  "في ظلال السيرة": "show-fi-zelal-alseerah",
-  "كتب صوتية": "show-kotob-sawteya",
-  "سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي": "show-seerat-alhabeeb"
-};
+// Fixed ASCII IDs for the 5 podcasts to guarantee zero pathing bugs
+const SHOW_CONFIG = [
+  { id: 'show-1', name: 'بريد الجمعة للدكتور عبد الوهاب مطاوع' },
+  { id: 'show-2', name: 'صوت مختلف' },
+  { id: 'show-3', name: 'في ظلال السيرة' },
+  { id: 'show-4', name: 'كتب صوتية' },
+  { id: 'show-5', name: 'سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي' }
+];
+
+function getShowId(showName) {
+  const match = SHOW_CONFIG.find(c => c.name.trim() === showName.trim());
+  return match ? match.id : 'show-1';
+}
 
 /**
- * Bulletproof, rock-solid Podcast Website generator.
- * Uses clean ASCII URLs for GitHub Pages compatibility while rendering 100% Arabic titles and content inside HTML.
+ * STRICT BULLETPROOF WEBSITE GENERATOR
+ * Uses absolute canonical URLs for every link to prevent any relative path 404 errors on GitHub Pages.
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Bulletproof AdSense Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Strict Zero-404 AdSense Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
-  if (!fs.existsSync(docsDir)) {
-    fs.mkdirSync(docsDir, { recursive: true });
-  }
+  const rootEpDir = './episodes';
+  const docsEpDir = './docs/episodes';
 
-  // 1. Write .nojekyll & ads.txt
+  // Ensure all directories exist
+  [docsDir, rootEpDir, docsEpDir].forEach(d => {
+    if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+  });
+
+  // Write .nojekyll & ads.txt everywhere needed
   fs.writeFileSync('.nojekyll', '', 'utf8');
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
   fs.writeFileSync('ads.txt', ADS_TXT_CONTENT, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'ads.txt'), ADS_TXT_CONTENT, 'utf8');
 
-  // 2. Group episodes by show name
+  // Group episodes by show
   const showsMap = {};
   const episodePages = [];
 
   for (let i = 0; i < allProcessedData.length; i++) {
     const item = allProcessedData[i];
     const { episode, campaign } = item;
-    const show = episode.showTitle || 'البودكاست';
+    const showName = episode.showTitle || 'البودكاست';
 
-    if (!showsMap[show]) showsMap[show] = [];
-    
-    const epIndexInShow = showsMap[show].length + 1;
-    const safeShowSlug = SHOW_SLUG_MAP[show] || `show-${Object.keys(showsMap).length}`;
-    const epCleanSlug = `ep-${epIndexInShow}`;
+    if (!showsMap[showName]) showsMap[showName] = [];
 
-    item.showSlug = safeShowSlug;
+    const showId = getShowId(showName);
+    const epCleanSlug = `ep-${i + 1}`;
+
+    item.showId = showId;
     item.epSlug = epCleanSlug;
+    item.absEpUrl = `${BASE_URL}/episodes/${epCleanSlug}.html`;
 
-    showsMap[show].push(item);
+    showsMap[showName].push(item);
 
-    const rootShowDir = path.join('.', safeShowSlug);
-    const docsShowDir = path.join(docsDir, safeShowSlug);
-
-    if (!fs.existsSync(rootShowDir)) fs.mkdirSync(rootShowDir, { recursive: true });
-    if (!fs.existsSync(docsShowDir)) fs.mkdirSync(docsShowDir, { recursive: true });
-
-    const pageUrl = `${safeShowSlug}/${epCleanSlug}.html`;
-    const htmlContent = generateEpisodeHtml(episode, campaign, pageUrl);
+    const htmlContent = generateEpisodeHtml(episode, campaign, item.absEpUrl, showId);
 
     try {
-      fs.writeFileSync(path.join(rootShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
-      fs.writeFileSync(path.join(docsShowDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
+      fs.writeFileSync(path.join(rootEpDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
+      fs.writeFileSync(path.join(docsEpDir, `${epCleanSlug}.html`), htmlContent, 'utf8');
     } catch (e) {}
 
     episodePages.push({
       title: episode.title,
       showTitle: episode.showTitle,
       pubDate: episode.pubDate,
-      url: pageUrl
+      url: `episodes/${epCleanSlug}.html`
     });
   }
 
-  // 3. Generate Dedicated Show Archive Pages (e.g. show-bareed-aljumaa.html)
-  for (const showName of Object.keys(showsMap)) {
-    const showItems = showsMap[showName];
-    const safeShowSlug = SHOW_SLUG_MAP[showName] || `show-${Object.keys(showsMap).indexOf(showName) + 1}`;
-    const showHtml = generateDedicatedShowHtml(showName, showItems);
+  // 1. Generate Dedicated Show Pages (e.g. show-1.html, show-2.html...) in both root and docs
+  for (const config of SHOW_CONFIG) {
+    const showName = config.name;
+    const showItems = showsMap[showName] || [];
+    const showHtml = generateDedicatedShowHtml(showName, config.id, showItems);
 
-    fs.writeFileSync(`${safeShowSlug}.html`, showHtml, 'utf8');
-    fs.writeFileSync(path.join(docsDir, `${safeShowSlug}.html`), showHtml, 'utf8');
+    fs.writeFileSync(`${config.id}.html`, showHtml, 'utf8');
+    fs.writeFileSync(path.join(docsDir, `${config.id}.html`), showHtml, 'utf8');
   }
 
-  // 4. Generate Main Hub Page (index.html)
+  // 2. Generate Main Hub Page (index.html) in both root and docs
   const indexHtml = generateMainHubHtml(showsMap, allProcessedData.length);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
-  // 5. Generate Sitemap XML
+  // 3. Generate Sitemap XML
   const sitemapXml = generateSitemapXml(episodePages);
   fs.writeFileSync('sitemap.xml', sitemapXml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'sitemap.xml'), sitemapXml, 'utf8');
 
-  // 6. Generate Robots.txt
-  const robotsTxt = `User-agent: *\nAllow: /\nSitemap: https://turky4500.github.io/simplecast-ai-marketing-agent/sitemap.xml\n`;
+  // 4. Generate Robots.txt
+  const robotsTxt = `User-agent: *\nAllow: /\nSitemap: ${BASE_URL}/sitemap.xml\n`;
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ 100% Bulletproof ASCII-routed website generated successfully!`);
+  console.log(`[Site Generator] ✅ Strict Zero-404 Website build completed successfully!`);
 }
 
 function generateMainHubHtml(showsMap, totalEpisodesCount) {
-  const showKeys = Object.keys(showsMap);
-
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -136,7 +138,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --accent: #2563eb;
-      --accent-hover: #1d4ed8;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
@@ -263,7 +264,6 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
       font-weight: 800;
       font-size: 1rem;
       margin-top: 1.8rem;
-      transition: background 0.2s, transform 0.1s;
     }
     .btn-view-all:hover { background: #dbeafe; }
 
@@ -288,10 +288,10 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
   <div class="container">
     ${ADSENSE_BANNER}
 
-    ${showKeys.map(showName => {
-      const allItems = showsMap[showName];
+    ${SHOW_CONFIG.map(config => {
+      const showName = config.name;
+      const allItems = showsMap[showName] || [];
       const top2Items = allItems.slice(0, 2);
-      const safeShowSlug = SHOW_SLUG_MAP[showName] || `show-${showKeys.indexOf(showName) + 1}`;
 
       return `
       <div class="show-section">
@@ -314,13 +314,13 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 
               <div class="ep-footer">
                 <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-                <a href="${item.showSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
+                <a href="${item.absEpUrl}" class="btn-details">التفاصيل والقراءة ←</a>
               </div>
             </div>
           `).join('')}
         </div>
 
-        <a href="${safeShowSlug}.html" class="btn-view-all">
+        <a href="${BASE_URL}/${config.id}.html" class="btn-view-all">
           🔍 استعرض كامل الحلقات (${allItems.length} حلقة) ←
         </a>
       </div>
@@ -352,7 +352,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
 </html>`;
 }
 
-function generateDedicatedShowHtml(showName, showItems) {
+function generateDedicatedShowHtml(showName, showId, showItems) {
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -451,7 +451,7 @@ function generateDedicatedShowHtml(showName, showItems) {
   </div>
 
   <div class="container">
-    <a href="index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
+    <a href="${BASE_URL}/index.html" class="back-btn">← العودة إلى الصفحة الرئيسية</a>
 
     ${ADSENSE_BANNER}
 
@@ -469,7 +469,7 @@ function generateDedicatedShowHtml(showName, showItems) {
 
           <div class="ep-footer">
             <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${item.episode.pubDate}</span>
-            <a href="${item.showSlug}/${item.epSlug}.html" class="btn-details">التفاصيل والقراءة ←</a>
+            <a href="${item.absEpUrl}" class="btn-details">التفاصيل والقراءة ←</a>
           </div>
         </div>
       `).join('')}
@@ -500,8 +500,7 @@ function generateDedicatedShowHtml(showName, showItems) {
 </html>`;
 }
 
-function generateEpisodeHtml(episode, campaign, pageUrl) {
-  const fullCanonicalUrl = `https://turky4500.github.io/simplecast-ai-marketing-agent/${pageUrl}`;
+function generateEpisodeHtml(episode, campaign, absEpUrl, showId) {
   const seoTitle = `${episode.title} - ${episode.showTitle}`;
   const seoDesc = campaign.googleSeoArticle?.metaDescription || episode.description.substring(0, 160);
   const audioFileUrl = episode.audioUrl || episode.link;
@@ -513,7 +512,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(seoTitle)}</title>
   <meta name="description" content="${escapeHtml(seoDesc)}">
-  <link rel="canonical" href="${fullCanonicalUrl}">
+  <link rel="canonical" href="${absEpUrl}">
   
   <!-- Google AdSense Script -->
   ${ADSENSE_SCRIPT}
@@ -623,7 +622,7 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
   </header>
 
   <div class="container">
-    <a href="../index.html" class="back-btn">→ العودة إلى الصفحة الرئيسية</a>
+    <a href="${BASE_URL}/${showId}.html" class="back-btn">→ العودة إلى أرشيف ${escapeHtml(episode.showTitle)}</a>
 
     <div class="player-card">
       <h2>${escapeHtml(episode.title)}</h2>
@@ -681,10 +680,10 @@ function generateEpisodeHtml(episode, campaign, pageUrl) {
 }
 
 function generateSitemapXml(episodePages) {
-  const baseUrl = 'https://turky4500.github.io/simplecast-ai-marketing-agent';
   const urls = [
-    `${baseUrl}/index.html`,
-    ...episodePages.map(p => `${baseUrl}/${p.url}`)
+    `${BASE_URL}/index.html`,
+    ...SHOW_CONFIG.map(c => `${BASE_URL}/${c.id}.html`),
+    ...episodePages.map(p => `${BASE_URL}/${p.url}`)
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>
