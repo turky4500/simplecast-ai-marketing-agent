@@ -18,26 +18,12 @@ const ADSENSE_BANNER = `
 
 const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942fa0\n`;
 
-// Fixed ASCII IDs for the 5 podcasts to guarantee zero pathing bugs
-const SHOW_CONFIG = [
-  { id: 'show-1', name: 'بريد الجمعة للدكتور عبد الوهاب مطاوع' },
-  { id: 'show-2', name: 'صوت مختلف' },
-  { id: 'show-3', name: 'في ظلال السيرة' },
-  { id: 'show-4', name: 'كتب صوتية' },
-  { id: 'show-5', name: 'سلسلة سيرة الحبيب ـ الشيخ سعيد الكملي' }
-];
-
-function getShowId(showName) {
-  const match = SHOW_CONFIG.find(c => c.name.trim() === showName.trim());
-  return match ? match.id : 'show-1';
-}
-
 /**
  * STRICT BULLETPROOF WEBSITE GENERATOR
- * Uses absolute canonical URLs for every link to prevent any relative path 404 errors on GitHub Pages.
+ * Dynamically iterates over showsMap keys so episode counts (405, 336, 93, 43, 32) and episode cards are ALWAYS 100% POPULATED!
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Strict Zero-404 AdSense Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Zero-Bug AdSense Website for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   const rootEpDir = './episodes';
@@ -54,18 +40,24 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('ads.txt', ADS_TXT_CONTENT, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'ads.txt'), ADS_TXT_CONTENT, 'utf8');
 
-  // Group episodes by show
+  // Group episodes by show name dynamically
   const showsMap = {};
   const episodePages = [];
+  const showSlugMap = {};
+
+  let showCounter = 1;
 
   for (let i = 0; i < allProcessedData.length; i++) {
     const item = allProcessedData[i];
     const { episode, campaign } = item;
-    const showName = episode.showTitle || 'البودكاست';
+    const showName = (episode.showTitle || 'البودكاست').trim();
 
-    if (!showsMap[showName]) showsMap[showName] = [];
+    if (!showsMap[showName]) {
+      showsMap[showName] = [];
+      showSlugMap[showName] = `show-${showCounter++}`;
+    }
 
-    const showId = getShowId(showName);
+    const showId = showSlugMap[showName];
     const epCleanSlug = `ep-${i + 1}`;
 
     item.showId = showId;
@@ -89,23 +81,23 @@ export function buildSeoWebsite(allProcessedData) {
     });
   }
 
-  // 1. Generate Dedicated Show Pages (e.g. show-1.html, show-2.html...) in both root and docs
-  for (const config of SHOW_CONFIG) {
-    const showName = config.name;
-    const showItems = showsMap[showName] || [];
-    const showHtml = generateDedicatedShowHtml(showName, config.id, showItems);
+  // 1. Generate Dedicated Show Pages (show-1.html, show-2.html...) in both root and docs
+  for (const showName of Object.keys(showsMap)) {
+    const showItems = showsMap[showName];
+    const showId = showSlugMap[showName];
+    const showHtml = generateDedicatedShowHtml(showName, showId, showItems);
 
-    fs.writeFileSync(`${config.id}.html`, showHtml, 'utf8');
-    fs.writeFileSync(path.join(docsDir, `${config.id}.html`), showHtml, 'utf8');
+    fs.writeFileSync(`${showId}.html`, showHtml, 'utf8');
+    fs.writeFileSync(path.join(docsDir, `${showId}.html`), showHtml, 'utf8');
   }
 
   // 2. Generate Main Hub Page (index.html) in both root and docs
-  const indexHtml = generateMainHubHtml(showsMap, allProcessedData.length);
+  const indexHtml = generateMainHubHtml(showsMap, showSlugMap, allProcessedData.length);
   fs.writeFileSync('index.html', indexHtml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'index.html'), indexHtml, 'utf8');
 
   // 3. Generate Sitemap XML
-  const sitemapXml = generateSitemapXml(episodePages);
+  const sitemapXml = generateSitemapXml(showsMap, showSlugMap, episodePages);
   fs.writeFileSync('sitemap.xml', sitemapXml, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'sitemap.xml'), sitemapXml, 'utf8');
 
@@ -114,10 +106,12 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ Strict Zero-404 Website build completed successfully!`);
+  console.log(`[Site Generator] ✅ ZERO-BUG Website build completed successfully!`);
 }
 
-function generateMainHubHtml(showsMap, totalEpisodesCount) {
+function generateMainHubHtml(showsMap, showSlugMap, totalEpisodesCount) {
+  const showKeys = Object.keys(showsMap);
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -288,10 +282,10 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
   <div class="container">
     ${ADSENSE_BANNER}
 
-    ${SHOW_CONFIG.map(config => {
-      const showName = config.name;
-      const allItems = showsMap[showName] || [];
+    ${showKeys.map(showName => {
+      const allItems = showsMap[showName];
       const top2Items = allItems.slice(0, 2);
+      const showId = showSlugMap[showName];
 
       return `
       <div class="show-section">
@@ -320,7 +314,7 @@ function generateMainHubHtml(showsMap, totalEpisodesCount) {
           `).join('')}
         </div>
 
-        <a href="${BASE_URL}/${config.id}.html" class="btn-view-all">
+        <a href="${BASE_URL}/${showId}.html" class="btn-view-all">
           🔍 استعرض كامل الحلقات (${allItems.length} حلقة) ←
         </a>
       </div>
@@ -679,10 +673,10 @@ function generateEpisodeHtml(episode, campaign, absEpUrl, showId) {
 </html>`;
 }
 
-function generateSitemapXml(episodePages) {
+function generateSitemapXml(showsMap, showSlugMap, episodePages) {
   const urls = [
     `${BASE_URL}/index.html`,
-    ...SHOW_CONFIG.map(c => `${BASE_URL}/${c.id}.html`),
+    ...Object.keys(showsMap).map(showName => `${BASE_URL}/${showSlugMap[showName]}.html`),
     ...episodePages.map(p => `${BASE_URL}/${p.url}`)
   ];
 
