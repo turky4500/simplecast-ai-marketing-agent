@@ -7,10 +7,11 @@ const ADSENSE_SCRIPT = `<script async src="https://pagead2.googlesyndication.com
 
 const ADSENSE_BANNER = `
 <div style="margin: 1.5rem 0; text-align: center;">
+  <!-- موقع البودكاست -->
   <ins class="adsbygoogle"
        style="display:block"
        data-ad-client="ca-pub-7778135355055222"
-       data-ad-slot="auto"
+       data-ad-slot="5093830951"
        data-ad-format="auto"
        data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
@@ -20,10 +21,10 @@ const ADS_TXT_CONTENT = `google.com, pub-7778135355055222, DIRECT, f08c47fec0942
 
 /**
  * STRICT BULLETPROOF WEBSITE GENERATOR
- * Dynamically iterates over showsMap keys so episode counts (405, 336, 93, 43, 32) and episode cards are ALWAYS 100% POPULATED!
+ * Dynamically maps show titles and embeds custom Google AdSense Ad Unit (slot: 5093830951).
  */
 export function buildSeoWebsite(allProcessedData) {
-  console.log(`[Site Generator] Building Zero-Bug AdSense Website for ${allProcessedData.length} episode(s)...`);
+  console.log(`[Site Generator] Building Website with Custom AdSense Unit (5093830951) for ${allProcessedData.length} episode(s)...`);
 
   const docsDir = './docs';
   const rootEpDir = './episodes';
@@ -106,7 +107,7 @@ export function buildSeoWebsite(allProcessedData) {
   fs.writeFileSync('robots.txt', robotsTxt, 'utf8');
   fs.writeFileSync(path.join(docsDir, 'robots.txt'), robotsTxt, 'utf8');
 
-  console.log(`[Site Generator] ✅ ZERO-BUG Website build completed successfully!`);
+  console.log(`[Site Generator] ✅ Custom AdSense Ad Unit (5093830951) successfully embedded!`);
 }
 
 function generateMainHubHtml(showsMap, showSlugMap, totalEpisodesCount) {
@@ -132,6 +133,7 @@ function generateMainHubHtml(showsMap, showSlugMap, totalEpisodesCount) {
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --accent: #2563eb;
+      --accent-hover: #1d4ed8;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
